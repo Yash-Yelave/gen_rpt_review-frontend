@@ -7,7 +7,6 @@ export enum ReportStatus {
   NeedsHumanReview = 'Needs Human Review',
   NeedsRevision = 'Needs Revision',
   Approved = 'Approved',
-  ReadyToPublish = 'Ready to Publish',
   Published = 'Published',
   Rejected = 'Rejected',
 }

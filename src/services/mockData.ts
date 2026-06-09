@@ -332,7 +332,7 @@ export const MOCK_REPORTS: Report[] = [
     id: 'RPT-2026-0604',
     title: 'GCC AI Regulation Landscape: Policy Gaps and Opportunity Map',
     version: 'v1.0',
-    status: ReportStatus.ReadyToPublish,
+    status: ReportStatus.Approved,
     humanStatus: 'Approved',
     aiScore: 78.4,
     aiGrade: 'Bronze',

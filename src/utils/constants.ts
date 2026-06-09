@@ -24,7 +24,6 @@ export const REPORT_STATUSES = [
   'Needs Human Review',
   'Needs Revision',
   'Approved',
-  'Ready to Publish',
   'Published',
   'Rejected',
 ] as const;

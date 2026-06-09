@@ -26,7 +26,7 @@ export const reviewsService = {
 
   async sendToPublish(reportId: string): Promise<void> {
     await delay();
-    await reportsService.updateStatus(reportId, 'Ready to Publish');
+    await reportsService.updateStatus(reportId, 'Approved');
     await reportsService.updateHumanStatus(reportId, 'Approved');
     await reportsService.setPublishReady(reportId, true);
   },

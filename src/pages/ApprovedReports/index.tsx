@@ -10,7 +10,7 @@ export const ApprovedReportsList: React.FC = () => (
       <p className="text-sm text-gray-500 mt-1">Human-approved reports waiting for publish confirmation</p>
     </div>
     <ReportGrid
-      statuses={[ReportStatus.Approved, ReportStatus.ReadyToPublish]}
+      statuses={[ReportStatus.Approved]}
       emptyTitle="No approved reports"
       emptyText="There are currently no approved reports awaiting publication."
     />

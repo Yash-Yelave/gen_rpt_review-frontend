@@ -62,7 +62,7 @@ graph TD
 ```
 
 ### 1. Unified Dashboard
-- Displays metrics cards: Total Reports, Pending Human Review, AI Approved, Ready to Publish, and Needs Revision.
+- Displays metrics cards: Total Reports, Pending Human Review, AI Approved, Approved, and Needs Revision.
 - Table view displaying each report's general metrics: overall AI score, grade (Gold/Silver/Bronze), status, last updated time, and quick actions.
 
 ### 2. The Interactive 3-Panel Editorial Workspace

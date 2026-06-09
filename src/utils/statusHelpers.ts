@@ -7,7 +7,6 @@ export function statusBadgeClasses(status: string): string {
     'Needs Human Review':   'bg-orange-100 text-orange-700',
     'Needs Revision':       'bg-orange-100 text-orange-700',
     'Approved':             'bg-green-100 text-green-700',
-    'Ready to Publish':     'bg-green-100 text-green-700',
     'Published':            'bg-green-700 text-white',
     'Rejected':             'bg-red-100 text-red-700',
   };
