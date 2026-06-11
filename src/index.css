@@ -54,6 +54,22 @@
   .comment-open     { @apply border-l-[3px] border-l-blue-500; }
   .comment-resolved { @apply border-l-[3px] border-l-green-600 opacity-70; }
   .comment-sent     { @apply border-l-[3px] border-l-orange-600; }
+
+  /* === PARAGRAPH HIGHLIGHT (AI Review navigation) === */
+  @keyframes paragraphFlash {
+    0%   { background-color: #DBEAFE; border-left-color: #1D4ED8; }
+    65%  { background-color: #DBEAFE; border-left-color: #1D4ED8; }
+    100% { background-color: transparent; border-left-color: transparent; }
+  }
+
+  .para-highlighted {
+    animation: paragraphFlash 2.5s ease forwards;
+    border-left: 3px solid #1D4ED8;
+    padding-left: 0.75rem;
+    border-radius: 2px;
+    /* Keep a subtle permanent border after animation ends */
+    outline-offset: 0;
+  }
 }
 
 @layer utilities {
