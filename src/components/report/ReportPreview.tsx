@@ -1,5 +1,5 @@
 // src/components/report/ReportPreview.tsx
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { Bot, FileText, MapPin, ArrowRight } from 'lucide-react';
 import type { Report } from '@/types';
 import { useUIStore } from '@/store/uiStore';
@@ -13,9 +13,13 @@ import {
   extractSeverity,
   stripSeverity,
 } from '@/utils/locationParser';
+import { useReviewHighlighter } from '@/hooks/useReviewHighlighter';
+import { AnnotationSidebar } from './AnnotationSidebar';
 
 interface Props {
   report: Report;
+  /** Raw text of review.md — when provided, exact quotes are highlighted inline */
+  reviewMdText?: string;
 }
 
 // Static contributors list (per spec — not part of report data model)
@@ -353,13 +357,18 @@ const AIReviewPane: React.FC<{ report: Report }> = ({ report }) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Main ReportPreview export
 // ─────────────────────────────────────────────────────────────────────────────
-export const ReportPreview: React.FC<Props> = ({ report }) => {
+export const ReportPreview: React.FC<Props> = ({ report, reviewMdText = '' }) => {
   const { zoomLevel, zoomIn, zoomOut } = useUIStore();
   const { reportContent: content, title, id, version, aiScore } = report;
 
   // Tab state now lives in the navigation store so the AI Review pane can switch tabs
   const activeTab = useReportNavStore((s) => s.activeTab);
   const setActiveTab = useReportNavStore((s) => s.setActiveTab);
+
+  // Ref attached to the rendered report body — used by the highlighter hook
+  const reportBodyRef = useRef<HTMLDivElement>(null);
+  // Parse review.md and apply inline highlights; clicking a span opens AnnotationSidebar
+  useReviewHighlighter(reviewMdText, reportBodyRef);
 
   // Build section list for TOC (exclude disclaimers)
   const tocSections = useMemo(
@@ -481,19 +490,25 @@ export const ReportPreview: React.FC<Props> = ({ report }) => {
             </div>
 
             {/* Sections — rendered with stable paragraph IDs */}
-            {content.sections.map((section, i) => (
-              <ReportSectionRenderer
-                key={i}
-                heading={section.heading}
-                body={section.body}
-                isDisclaimer={section.isDisclaimer}
-              />
-            ))}
+            {/* reportBodyRef lets useReviewHighlighter walk and highlight exact quotes */}
+            <div ref={reportBodyRef}>
+              {content.sections.map((section, i) => (
+                <ReportSectionRenderer
+                  key={i}
+                  heading={section.heading}
+                  body={section.body}
+                  isDisclaimer={section.isDisclaimer}
+                />
+              ))}
+            </div>
           </div>
         ) : (
           <AIReviewPane report={report} />
         )}
       </div>
+
+      {/* Annotation sidebar — rendered outside scroll container so it floats above everything */}
+      <AnnotationSidebar />
     </div>
   );
 };
