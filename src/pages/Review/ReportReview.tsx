@@ -9,6 +9,7 @@ import { HumanReviewCard } from '@/components/review/HumanReviewCard';
 import { CommentThread } from '@/components/comments/CommentThread';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FileWarning } from 'lucide-react';
+import reviewMdText from '../../../review.md?raw';
 
 export const ReportReview: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>();
@@ -48,7 +49,7 @@ export const ReportReview: React.FC = () => {
       <div className="review-body-grid">
         {/* Left: Document Preview with tabs (Report / AI Review) */}
         <div className="overflow-hidden flex flex-col h-full">
-          <ReportPreview report={report} />
+          <ReportPreview report={report} reviewMdText={reviewMdText} />
         </div>
 
         {/* Right: Human Review + Comments only */}
