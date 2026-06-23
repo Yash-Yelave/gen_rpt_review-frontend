@@ -4,7 +4,7 @@
 // with comments.json (the live comment thread) into a single response
 // matching the Report TypeScript interface consumed by useReport(id).
 
-import { getManifest, getComments, jsonOk, jsonError } from '../../../_shared/r2';
+import { getManifest, getComments, jsonOk, jsonError } from '../../_shared/r2';
 
 interface Env {
   REPORTS_BUCKET: R2Bucket;
