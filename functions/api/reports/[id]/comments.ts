@@ -14,11 +14,9 @@ import {
   updateCatalogEntry,
   jsonOk,
   jsonError,
+  Env,
+  S3Bucket
 } from '../../../_shared/r2';
-
-interface Env {
-  REPORTS_BUCKET: R2Bucket;
-}
 
 // ---------------------------------------------------------------------------
 // GET — return current comments array
@@ -29,7 +27,8 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   if (!id) return jsonError('Missing report id', 400);
 
   try {
-    const comments = await getComments(context.env.REPORTS_BUCKET, id);
+    const bucket = new S3Bucket(context.env);
+    const comments = await getComments(bucket, id);
     return jsonOk(comments);
   } catch (err) {
     console.error(`[GET /api/reports/${id}/comments] Error:`, err);
@@ -53,7 +52,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   }
 
   try {
-    const bucket = context.env.REPORTS_BUCKET;
+    const bucket = new S3Bucket(context.env);
     let comments = (await getComments(bucket, id)) as Record<string, unknown>[];
 
     if (body['_action'] === 'resolve') {
