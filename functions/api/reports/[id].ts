@@ -49,7 +49,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     ]);
 
     const reportMdStr = reportMdObj ? await reportMdObj.text() : '';
-    const reviewJsonData = reviewJsonObj ? await reviewJsonObj.json() : null;
+    const reviewJsonData: any = reviewJsonObj ? await reviewJsonObj.json() : null;
 
     // Assemble final report
     const report = {
