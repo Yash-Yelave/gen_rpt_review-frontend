@@ -4,13 +4,30 @@
 // so that list pages and the dashboard sidebar can render without loading
 // heavy reportContent or aiReview data.
 
-import { getCatalog, jsonOk, jsonError, Env, S3Bucket } from '../../_shared/r2';
+import { getCatalog, jsonOk, jsonError, Env } from '../../_shared/r2';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
-    const bucket = new S3Bucket(context.env);
-    const catalog = await getCatalog(bucket);
-    return jsonOk(catalog);
+    const catalogData = await getCatalog(context.env.REPORTS_BUCKET);
+    
+    // Map the new R2 JSON format to the frontend's Report format
+    const mappedCatalog = catalogData.map(item => ({
+      id: item.report_id,
+      title: item.title,
+      version: item.latest_version || 'v1',
+      status: item.status,
+      humanStatus: item.review_status,
+      aiScore: item.ai_score,
+      aiGrade: 'N/A', // Assuming grade is no longer provided
+      commentCount: 0, // Set to 0 in catalog list, filled in on specific report load
+      lastUpdated: item.created_at,
+      publishReady: item.status === 'published',
+      aiReview: null,
+      reportContent: { brand: '', label: '', date: '', sections: [] },
+      comments: []
+    }));
+
+    return jsonOk(mappedCatalog);
   } catch (err: any) {
     console.error('[GET /api/reports] Error:', err);
     return jsonError(`Failed to load catalog: ${err?.message || err}`);
