@@ -85,8 +85,9 @@ export async function getCatalog(bucket: S3Bucket): Promise<any[]> {
     const obj = await bucket.get('catalog/catalog.json');
     if (!obj) return [];
     return obj.json<any[]>();
-  } catch {
-    return [];
+  } catch (error) {
+    console.error('[getCatalog] R2 fetch error:', error);
+    throw error;
   }
 }
 
