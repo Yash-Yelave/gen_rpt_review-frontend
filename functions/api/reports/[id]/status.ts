@@ -19,11 +19,9 @@ import {
   updateCatalogEntry,
   jsonOk,
   jsonError,
+  Env,
+  S3Bucket
 } from '../../../_shared/r2';
-
-interface Env {
-  REPORTS_BUCKET: R2Bucket;
-}
 
 interface StatusUpdateBody {
   status?: string;
@@ -50,7 +48,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   }
 
   try {
-    const bucket = context.env.REPORTS_BUCKET;
+    const bucket = new S3Bucket(context.env);
     const manifest = await getManifest(bucket, id);
 
     if (!manifest) {
