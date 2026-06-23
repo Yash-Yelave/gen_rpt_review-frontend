@@ -4,21 +4,18 @@
 // with comments.json (the live comment thread) into a single response
 // matching the Report TypeScript interface consumed by useReport(id).
 
-import { getManifest, getComments, jsonOk, jsonError } from '../../_shared/r2';
-
-interface Env {
-  REPORTS_BUCKET: R2Bucket;
-}
+import { getManifest, getComments, jsonOk, jsonError, Env, S3Bucket } from '../../_shared/r2';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   const id = context.params['id'] as string;
   if (!id) return jsonError('Missing report id', 400);
 
   try {
+    const bucket = new S3Bucket(context.env);
     // Fetch manifest and comments in parallel for speed
     const [manifest, comments] = await Promise.all([
-      getManifest(context.env.REPORTS_BUCKET, id),
-      getComments(context.env.REPORTS_BUCKET, id),
+      getManifest(bucket, id),
+      getComments(bucket, id),
     ]);
 
     if (!manifest) {
