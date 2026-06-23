@@ -1,33 +1,51 @@
 // src/services/comments.service.ts
-import type { Comment } from '@/types';
-import { reportsService } from './reports.service';
+// Replaces the in-memory mockData-backed implementation with
+// Cloudflare Pages Function API calls backed by R2 storage.
+// Public interface is IDENTICAL to the previous mock.
 
-const delay = (ms = 150) => new Promise((r) => setTimeout(r, ms));
+import type { Comment } from '@/types';
 
 export const commentsService = {
+  /**
+   * GET /api/reports/:id/comments
+   * Returns the live Comment[] thread for the report.
+   * Returns [] gracefully if the report has no comments file.
+   */
   async getByReportId(reportId: string): Promise<Comment[]> {
-    await delay();
-    const report = await reportsService.getById(reportId);
-    return report?.comments ?? [];
+    try {
+      const res = await fetch(`/api/reports/${reportId}/comments`);
+      if (!res.ok) return [];
+      return res.json() as Promise<Comment[]>;
+    } catch {
+      return [];
+    }
   },
 
+  /**
+   * POST /api/reports/:id/comments  (body = full Comment object)
+   * Appends the comment to the thread in R2 and returns the updated array.
+   */
   async addComment(reportId: string, comment: Comment): Promise<Comment[]> {
-    await delay();
-    const reports = await reportsService.getAll();
-    const report = reports.find((r) => r.id === reportId);
-    if (!report) throw new Error(`Report ${reportId} not found`);
-    report.comments.push(comment);
-    report.commentCount = report.comments.length;
-    return [...report.comments];
+    const res = await fetch(`/api/reports/${reportId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(comment),
+    });
+    if (!res.ok) throw new Error(`Failed to add comment (${res.status})`);
+    return res.json() as Promise<Comment[]>;
   },
 
+  /**
+   * POST /api/reports/:id/comments  { _action: 'resolve', commentId }
+   * Transitions the target comment to 'resolved' status in R2.
+   */
   async resolveComment(reportId: string, commentId: string): Promise<Comment[]> {
-    await delay();
-    const reports = await reportsService.getAll();
-    const report = reports.find((r) => r.id === reportId);
-    if (!report) throw new Error(`Report ${reportId} not found`);
-    const comment = report.comments.find((c: Comment) => c.id === commentId);
-    if (comment) comment.status = 'resolved';
-    return [...report.comments];
+    const res = await fetch(`/api/reports/${reportId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ _action: 'resolve', commentId }),
+    });
+    if (!res.ok) throw new Error(`Failed to resolve comment (${res.status})`);
+    return res.json() as Promise<Comment[]>;
   },
 };
