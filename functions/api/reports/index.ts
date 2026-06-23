@@ -4,11 +4,12 @@
 // so that list pages and the dashboard sidebar can render without loading
 // heavy reportContent or aiReview data.
 
-import { getCatalog, jsonOk, jsonError, Env } from '../../_shared/r2';
+import { getCatalog, jsonOk, jsonError, Env, S3Bucket } from '../../_shared/r2';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
-    const catalogData = await getCatalog(context.env.REPORTS_BUCKET);
+    const bucket = new S3Bucket(context.env);
+    const catalogData = await getCatalog(bucket);
     
     // Map the new R2 JSON format to the frontend's Report format
     const mappedCatalog = catalogData.map(item => ({

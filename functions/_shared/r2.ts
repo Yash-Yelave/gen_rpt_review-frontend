@@ -1,8 +1,52 @@
 // functions/_shared/r2.ts
 // Shared R2 utility functions reused by multiple Pages Functions.
 
+import { AwsClient } from 'aws4fetch';
+
 export interface Env {
-  REPORTS_BUCKET: R2Bucket;
+  CF_ACCOUNT_ID: string;
+  R2_ACCESS_KEY_ID: string;
+  R2_SECRET_ACCESS_KEY: string;
+  R2_BUCKET_NAME: string;
+}
+
+export class S3Bucket {
+  private aws: AwsClient;
+  private baseUrl: string;
+
+  constructor(env: Env) {
+    this.aws = new AwsClient({
+      accessKeyId: env.R2_ACCESS_KEY_ID,
+      secretAccessKey: env.R2_SECRET_ACCESS_KEY,
+      service: 's3',
+      region: 'auto',
+    });
+    this.baseUrl = `https://${env.CF_ACCOUNT_ID}.r2.cloudflarestorage.com/${env.R2_BUCKET_NAME}`;
+  }
+
+  async get(key: string) {
+    const res = await this.aws.fetch(`${this.baseUrl}/${key}`);
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`S3 get error: ${res.status}`);
+    return {
+      body: res.body,
+      json: <T>() => res.json() as Promise<T>,
+      text: () => res.text(),
+    };
+  }
+
+  async put(key: string, body: any, options?: { httpMetadata?: { contentType?: string } }) {
+    const headers: Record<string, string> = {};
+    if (options?.httpMetadata?.contentType) {
+      headers['Content-Type'] = options.httpMetadata.contentType;
+    }
+    const res = await this.aws.fetch(`${this.baseUrl}/${key}`, {
+      method: 'PUT',
+      body,
+      headers,
+    });
+    if (!res.ok) throw new Error(`S3 put error: ${res.status}`);
+  }
 }
 
 export interface CatalogEntry {
@@ -36,7 +80,7 @@ export function jsonError(message: string, status = 500): Response {
   });
 }
 
-export async function getCatalog(bucket: R2Bucket): Promise<any[]> {
+export async function getCatalog(bucket: S3Bucket): Promise<any[]> {
   try {
     const obj = await bucket.get('catalog/catalog.json');
     if (!obj) return [];
@@ -47,12 +91,10 @@ export async function getCatalog(bucket: R2Bucket): Promise<any[]> {
 }
 
 export async function updateCatalogEntry(
-  bucket: R2Bucket,
+  bucket: S3Bucket,
   id: string,
   updates: Partial<CatalogEntry>
 ): Promise<void> {
-  // We cannot easily update the external catalog if it's managed by another system,
-  // but if we are still allowing status updates from the frontend:
   const catalog = await getCatalog(bucket);
   const idx = catalog.findIndex((e) => e.report_id === id);
   if (idx === -1) return;
@@ -62,7 +104,7 @@ export async function updateCatalogEntry(
   });
 }
 
-export async function getManifest(bucket: R2Bucket, id: string): Promise<Record<string, unknown> | null> {
+export async function getManifest(bucket: S3Bucket, id: string): Promise<Record<string, unknown> | null> {
   try {
     const obj = await bucket.get(`reports/${id}/manifest.json`);
     if (!obj) return null;
@@ -73,7 +115,7 @@ export async function getManifest(bucket: R2Bucket, id: string): Promise<Record<
 }
 
 export async function putManifest(
-  bucket: R2Bucket,
+  bucket: S3Bucket,
   id: string,
   manifest: Record<string, unknown>
 ): Promise<void> {
@@ -82,7 +124,7 @@ export async function putManifest(
   });
 }
 
-export async function getComments(bucket: R2Bucket, id: string): Promise<unknown[]> {
+export async function getComments(bucket: S3Bucket, id: string): Promise<unknown[]> {
   try {
     const obj = await bucket.get(`reports/${id}/comments.json`);
     if (!obj) return [];
@@ -93,7 +135,7 @@ export async function getComments(bucket: R2Bucket, id: string): Promise<unknown
 }
 
 export async function putComments(
-  bucket: R2Bucket,
+  bucket: S3Bucket,
   id: string,
   comments: unknown[]
 ): Promise<void> {

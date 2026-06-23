@@ -2,6 +2,11 @@ name = "gen-rpt-review"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-09-23"
 
-[[r2_buckets]]
-binding = "REPORTS_BUCKET"
-bucket_name = "gatex-reports-review-assets-dev"
+# R2 access must be done via S3-compatible API using environment variables.
+# The native binding fails because the bucket is in a different account.
+# Set these in: Cloudflare Pages Dashboard → Settings → Environment Variables
+#
+#   CF_ACCOUNT_ID
+#   R2_ACCESS_KEY_ID
+#   R2_SECRET_ACCESS_KEY
+#   R2_BUCKET_NAME
