@@ -64,6 +64,40 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       return map[s] || s;
     };
 
+    // Helper to safely extract string arrays
+    const extractStrings = (arr: any): string[] => {
+      if (!Array.isArray(arr)) return [];
+      return arr.map(item => typeof item === 'string' ? item : item?.finding || item?.point || JSON.stringify(item));
+    };
+
+    const recs = reviewJsonData?.recommendations || {};
+    const scoresData = reviewJsonData?.scores || reviewJsonData || {};
+
+    const aiReviewObj = reviewJsonData ? {
+      scores: {
+        overall_score: scoresData.overall_score || 0,
+        grade: scoresData.grade || 'N/A',
+        components: scoresData.components || {}
+      },
+      recommendations: {
+        strengths: extractStrings(recs.strengths || reviewJsonData?.strengths),
+        weaknesses: extractStrings(recs.weaknesses || reviewJsonData?.weaknesses),
+        priority_improvements: (recs.priority_improvements || recs.improvement_tasks || reviewJsonData?.priority_improvements || []).map((imp: any) => ({
+          issue: imp.issue || imp.finding || 'Unknown issue',
+          impact: imp.impact || imp.expected_impact || 'Needs review',
+          suggested_fix: imp.suggested_fix || imp.fix || imp.suggestion || 'Review manually',
+          priority_level: imp.priority_level || imp.priority || imp.severity || 'Medium'
+        })),
+        executive_readiness: recs.executive_readiness || recs.executive_communication || reviewJsonData?.executive_readiness || {
+          board_members: false, ministers: false, ceos: false, sovereign_wealth_funds: false, senior_executives: false, justification: ''
+        }
+      },
+      dataGaps: extractStrings(reviewJsonData?.dataGaps || recs.data_gaps),
+      writingFlaws: extractStrings(reviewJsonData?.writingFlaws || recs.writing_flaws),
+      strategicGaps: extractStrings(reviewJsonData?.strategicGaps || recs.strategic_gaps),
+      gccGaps: extractStrings(reviewJsonData?.gccGaps || recs.gcc_gaps)
+    } : null;
+
     // Assemble final report
     const report = {
       id: manifest.report_id || id,
@@ -71,28 +105,12 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       version: 'v1',
       status: mapStatus(manifest.current_status || 'ai_reviewed'),
       humanStatus: manifest.review_status || 'pending',
-      aiScore: reviewJsonData?.scores?.overall_score || reviewJsonData?.overall_score || 0,
-      aiGrade: reviewJsonData?.scores?.grade || reviewJsonData?.grade || 'N/A',
+      aiScore: aiReviewObj?.scores?.overall_score || 0,
+      aiGrade: aiReviewObj?.scores?.grade || 'N/A',
       commentCount: comments.length,
       lastUpdated: manifest.updated_at || new Date().toISOString(),
       publishReady: false,
-      aiReview: reviewJsonData ? {
-        scores: {
-          overall_score: reviewJsonData.scores?.overall_score || reviewJsonData.overall_score || 0,
-          grade: reviewJsonData.scores?.grade || reviewJsonData.grade || 'N/A',
-          components: reviewJsonData.scores?.components || reviewJsonData.components || {}
-        },
-        recommendations: reviewJsonData.recommendations || {
-          strengths: reviewJsonData.strengths || [],
-          weaknesses: reviewJsonData.weaknesses || [],
-          priority_improvements: reviewJsonData.priority_improvements || [],
-          executive_readiness: reviewJsonData.executive_readiness || {}
-        },
-        dataGaps: reviewJsonData.dataGaps || [],
-        writingFlaws: reviewJsonData.writingFlaws || [],
-        strategicGaps: reviewJsonData.strategicGaps || [],
-        gccGaps: reviewJsonData.gccGaps || []
-      } : null,
+      aiReview: aiReviewObj,
       reportContent: {
         brand: 'GateX',
         label: 'Intelligence Report',
