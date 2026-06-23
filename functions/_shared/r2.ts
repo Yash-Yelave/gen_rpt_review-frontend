@@ -2,6 +2,53 @@
 // Shared R2 utility functions reused by multiple Pages Functions.
 // Handles catalog reads/writes so every endpoint stays consistent.
 
+import { AwsClient } from 'aws4fetch';
+
+export interface Env {
+  CF_ACCOUNT_ID: string;
+  R2_ACCESS_KEY_ID: string;
+  R2_SECRET_ACCESS_KEY: string;
+  R2_BUCKET_NAME: string;
+}
+
+export class S3Bucket {
+  private aws: AwsClient;
+  private baseUrl: string;
+
+  constructor(env: Env) {
+    this.aws = new AwsClient({
+      accessKeyId: env.R2_ACCESS_KEY_ID,
+      secretAccessKey: env.R2_SECRET_ACCESS_KEY,
+      service: 's3',
+      region: 'auto',
+    });
+    this.baseUrl = `https://${env.CF_ACCOUNT_ID}.r2.cloudflarestorage.com/${env.R2_BUCKET_NAME}`;
+  }
+
+  async get(key: string) {
+    const res = await this.aws.fetch(`${this.baseUrl}/${key}`);
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`S3 get error: ${res.status}`);
+    return {
+      body: res.body,
+      json: <T>() => res.json() as Promise<T>,
+    };
+  }
+
+  async put(key: string, body: any, options?: { httpMetadata?: { contentType?: string } }) {
+    const headers: Record<string, string> = {};
+    if (options?.httpMetadata?.contentType) {
+      headers['Content-Type'] = options.httpMetadata.contentType;
+    }
+    const res = await this.aws.fetch(`${this.baseUrl}/${key}`, {
+      method: 'PUT',
+      body,
+      headers,
+    });
+    if (!res.ok) throw new Error(`S3 put error: ${res.status}`);
+  }
+}
+
 export interface CatalogEntry {
   id: string;
   title: string;
