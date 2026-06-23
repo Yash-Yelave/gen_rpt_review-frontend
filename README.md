@@ -17,6 +17,18 @@ This dashboard serves as the **Human-in-the-Loop (HITL) Editor** for the Deep Re
 
 ---
 
+## 📖 Developer Documentation
+
+Comprehensive documentation guides are available in the **[docs/](file:///d:/BlueOcean/gen_rpt_review-frontend-main/docs/README.md)** directory:
+
+*   **[Architecture & Data Flow](file:///d:/BlueOcean/gen_rpt_review-frontend-main/docs/architecture.md)**: Zustand global stores, React Query caching/mutations, and mock service layer.
+*   **[Component Reference](file:///d:/BlueOcean/gen_rpt_review-frontend-main/docs/components.md)**: Details on the 3-panel review canvas, sidebar counts, and layouts.
+*   **[Highlighting & Navigation](file:///d:/BlueOcean/gen_rpt_review-frontend-main/docs/highlighting_navigation.md)**: Regex parser for `review.md`, smooth scrolling, and inline DOM highlights.
+*   **[Editorial Workflows](file:///d:/BlueOcean/gen_rpt_review-frontend-main/docs/workflows.md)**: Visual state transitions and action pathways for approval/revision/rejection.
+*   **[Development & Customization](file:///d:/BlueOcean/gen_rpt_review-frontend-main/docs/development.md)**: Scripts, configuration maps, and how to customize reports in `mockData.ts`.
+
+---
+
 ## 📂 Codebase Directory Structure
 
 The frontend application follows a clean, modular React directory structure under `src/`:
