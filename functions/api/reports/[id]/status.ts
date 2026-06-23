@@ -16,6 +16,9 @@ import {
   getManifest,
   putManifest,
   getComments,
+  updateCatalogEntry,
+  jsonOk,
+  jsonError,
   Env,
 } from '../../../_shared/r2';
 
