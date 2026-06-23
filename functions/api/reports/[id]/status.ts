@@ -16,11 +16,7 @@ import {
   getManifest,
   putManifest,
   getComments,
-  updateCatalogEntry,
-  jsonOk,
-  jsonError,
   Env,
-  S3Bucket
 } from '../../../_shared/r2';
 
 interface StatusUpdateBody {
@@ -48,7 +44,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   }
 
   try {
-    const bucket = new S3Bucket(context.env);
+    const bucket = context.env.REPORTS_BUCKET;
     const manifest = await getManifest(bucket, id);
 
     if (!manifest) {
