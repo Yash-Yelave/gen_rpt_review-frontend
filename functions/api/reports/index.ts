@@ -11,8 +11,8 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     const bucket = new S3Bucket(context.env);
     const catalog = await getCatalog(bucket);
     return jsonOk(catalog);
-  } catch (err) {
+  } catch (err: any) {
     console.error('[GET /api/reports] Error:', err);
-    return jsonError('Failed to load catalog');
+    return jsonError(`Failed to load catalog: ${err?.message || err}`);
   }
 };
