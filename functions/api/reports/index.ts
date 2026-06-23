@@ -11,12 +11,25 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     const bucket = new S3Bucket(context.env);
     const catalogData = await getCatalog(bucket);
     
+    const mapStatus = (s: string) => {
+      const map: Record<string, string> = {
+        'generated': 'Generated',
+        'ai_reviewed': 'AI Reviewed',
+        'in_review': 'Needs Human Review',
+        'needs_revision': 'Needs Revision',
+        'approved': 'Approved',
+        'published': 'Published',
+        'rejected': 'Rejected'
+      };
+      return map[s] || s;
+    };
+
     // Map the new R2 JSON format to the frontend's Report format
     const mappedCatalog = catalogData.map(item => ({
       id: item.report_id,
       title: item.title,
       version: item.latest_version || 'v1',
-      status: item.status,
+      status: mapStatus(item.status),
       humanStatus: item.review_status,
       aiScore: item.ai_score,
       aiGrade: 'N/A', // Assuming grade is no longer provided
