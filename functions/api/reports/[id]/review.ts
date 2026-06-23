@@ -3,7 +3,7 @@
 // Returns an empty string (not an error) if no review.md exists,
 // so the UI degrades gracefully (no highlights, no annotation sidebar).
 
-import { Env } from '../../../_shared/r2';
+import { Env, S3Bucket } from '../../../_shared/r2';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   const id = context.params['id'] as string;
@@ -12,7 +12,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   }
 
   try {
-    const bucket = context.env.REPORTS_BUCKET;
+    const bucket = new S3Bucket(context.env);
     const obj = await bucket.get(`reports/${id}/reviews/review.json`);
 
     if (!obj) {
