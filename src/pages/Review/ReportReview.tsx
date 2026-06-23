@@ -1,6 +1,7 @@
 // src/pages/Review/ReportReview.tsx
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useReport } from '@/hooks/useReports';
 import { useReviewStore } from '@/store/reviewStore';
 import { ReviewTopbar } from '@/components/review/ReviewTopbar';
@@ -9,12 +10,26 @@ import { HumanReviewCard } from '@/components/review/HumanReviewCard';
 import { CommentThread } from '@/components/comments/CommentThread';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FileWarning } from 'lucide-react';
-import reviewMdText from '../../../review.md?raw';
 
 export const ReportReview: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
   const { data: report, isLoading } = useReport(reportId ?? '');
+
+  // Fetch review.md text at runtime from R2 via the Pages Function.
+  // Falls back to '' while loading or on error so highlights gracefully absent.
+  const { data: reviewMdText = '' } = useQuery<string>({
+    queryKey: ['review-md', reportId],
+    queryFn: async () => {
+      if (!reportId) return '';
+      const res = await fetch(`/api/reports/${reportId}/review`);
+      if (!res.ok) return '';
+      return res.text();
+    },
+    enabled: !!reportId,
+    staleTime: 60_000,
+  });
+
   const resetForm = useReviewStore((s: any) => s.reset);
   const setDecision = useReviewStore((s: any) => s.setDecision);
 
