@@ -116,46 +116,69 @@ function seedLocal() {
 // Remote seeding — upload each file via wrangler CLI
 // ---------------------------------------------------------------------------
 
-function putRemote(key: string, content: string) {
-  // Write to a temp file so wrangler can read it
-  const tmp = path.join(os.tmpdir(), `seed-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-  fs.writeFileSync(tmp, content, 'utf-8');
-  try {
-    execSync(
-      `npx wrangler r2 object put "${bucketArg}/${key}" --file "${tmp}" --content-type application/json`,
-      { stdio: 'pipe' }
-    );
-    console.log(`  ✅  ${key}`);
-  } finally {
-    fs.rmSync(tmp, { force: true });
+import { AwsClient } from 'aws4fetch';
+
+async function putRemote(key: string, content: string) {
+  const { CF_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME } = process.env;
+  if (!CF_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
+    console.error("❌ Missing required env vars: CF_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY");
+    process.exit(1);
   }
+  const bucket = R2_BUCKET_NAME || bucketArg;
+
+  const aws = new AwsClient({
+    accessKeyId: R2_ACCESS_KEY_ID,
+    secretAccessKey: R2_SECRET_ACCESS_KEY,
+    service: 's3',
+    region: 'auto',
+  });
+
+  const url = `https://${CF_ACCOUNT_ID}.r2.cloudflarestorage.com/${bucket}/${key}`;
+  const res = await aws.fetch(url, {
+    method: 'PUT',
+    body: content,
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to upload ${key}: ${res.status} ${res.statusText}`);
+  }
+  console.log(`  ✅  ${key}`);
 }
 
-function seedRemote() {
-  console.log(`\n☁️   Uploading to Cloudflare R2 bucket: ${bucketArg}\n`);
+async function seedRemote() {
+  const bucket = process.env.R2_BUCKET_NAME || bucketArg;
+  console.log(`\n☁️   Uploading to Cloudflare R2 bucket: ${bucket}\n`);
 
-  putRemote('catalog.json', JSON.stringify(buildCatalog(), null, 2));
+  await putRemote('catalog.json', JSON.stringify(buildCatalog(), null, 2));
 
   for (const report of MOCK_REPORTS) {
-    putRemote(
+    await putRemote(
       `reports/${report.id}/manifest.json`,
       JSON.stringify(buildManifest(report), null, 2)
     );
-    putRemote(
+    await putRemote(
       `reports/${report.id}/comments.json`,
       JSON.stringify(report.comments, null, 2)
     );
   }
 
-  console.log(`\n✨  Remote R2 bucket "${bucketArg}" seeded successfully.`);
+  console.log(`\n✨  Remote R2 bucket "${bucket}" seeded successfully.`);
 }
 
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
-if (isLocal) {
-  seedLocal();
-} else {
-  seedRemote();
+async function main() {
+  if (isLocal) {
+    seedLocal();
+  } else {
+    await seedRemote();
+  }
 }
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
