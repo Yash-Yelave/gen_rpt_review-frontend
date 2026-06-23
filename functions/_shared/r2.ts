@@ -4,10 +4,10 @@
 import { AwsClient } from 'aws4fetch';
 
 export interface Env {
-  CF_ACCOUNT_ID: string;
+  R2_ACCOUNT_ID: string;
   R2_ACCESS_KEY_ID: string;
   R2_SECRET_ACCESS_KEY: string;
-  R2_BUCKET_NAME: string;
+  R2_BUCKET: string;
 }
 
 export class S3Bucket {
@@ -21,7 +21,7 @@ export class S3Bucket {
       service: 's3',
       region: 'auto',
     });
-    this.baseUrl = `https://${env.CF_ACCOUNT_ID}.r2.cloudflarestorage.com/${env.R2_BUCKET_NAME}`;
+    this.baseUrl = `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${env.R2_BUCKET}`;
   }
 
   async get(key: string) {
