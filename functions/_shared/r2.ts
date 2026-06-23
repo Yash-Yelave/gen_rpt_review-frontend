@@ -91,7 +91,7 @@ export function jsonError(message: string, status = 500): Response {
 /**
  * Read catalog.json from R2. Returns [] if missing or on error.
  */
-export async function getCatalog(bucket: R2Bucket): Promise<CatalogEntry[]> {
+export async function getCatalog(bucket: S3Bucket): Promise<CatalogEntry[]> {
   try {
     const obj = await bucket.get('catalog.json');
     if (!obj) return [];
@@ -106,7 +106,7 @@ export async function getCatalog(bucket: R2Bucket): Promise<CatalogEntry[]> {
  * No-ops silently if the entry ID is not found.
  */
 export async function updateCatalogEntry(
-  bucket: R2Bucket,
+  bucket: S3Bucket,
   id: string,
   updates: Partial<CatalogEntry>
 ): Promise<void> {
@@ -126,7 +126,7 @@ export async function updateCatalogEntry(
 /**
  * Read the full manifest for a report. Returns null if not found.
  */
-export async function getManifest(bucket: R2Bucket, id: string): Promise<Record<string, unknown> | null> {
+export async function getManifest(bucket: S3Bucket, id: string): Promise<Record<string, unknown> | null> {
   try {
     const obj = await bucket.get(`reports/${id}/manifest.json`);
     if (!obj) return null;
@@ -140,7 +140,7 @@ export async function getManifest(bucket: R2Bucket, id: string): Promise<Record<
  * Write the manifest back to R2.
  */
 export async function putManifest(
-  bucket: R2Bucket,
+  bucket: S3Bucket,
   id: string,
   manifest: Record<string, unknown>
 ): Promise<void> {
@@ -156,7 +156,7 @@ export async function putManifest(
 /**
  * Read the comments array for a report. Returns [] if missing.
  */
-export async function getComments(bucket: R2Bucket, id: string): Promise<unknown[]> {
+export async function getComments(bucket: S3Bucket, id: string): Promise<unknown[]> {
   try {
     const obj = await bucket.get(`reports/${id}/comments.json`);
     if (!obj) return [];
@@ -170,7 +170,7 @@ export async function getComments(bucket: R2Bucket, id: string): Promise<unknown
  * Write the comments array back to R2.
  */
 export async function putComments(
-  bucket: R2Bucket,
+  bucket: S3Bucket,
   id: string,
   comments: unknown[]
 ): Promise<void> {
