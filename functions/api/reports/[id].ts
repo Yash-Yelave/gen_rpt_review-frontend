@@ -4,7 +4,7 @@
 // with comments.json (the live comment thread) into a single response
 // matching the Report TypeScript interface consumed by useReport(id).
 
-import { getManifest, getComments, jsonOk, jsonError, Env } from '../../_shared/r2';
+import { getManifest, getComments, jsonOk, jsonError, Env, S3Bucket } from '../../_shared/r2';
 
 function parseMarkdownToSections(md: string) {
   const lines = md.split('\n');
@@ -34,7 +34,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   if (!id) return jsonError('Missing report id', 400);
 
   try {
-    const bucket = context.env.REPORTS_BUCKET;
+    const bucket = new S3Bucket(context.env);
     const manifest = await getManifest(bucket, id) as any;
 
     if (!manifest || !manifest.files) {
