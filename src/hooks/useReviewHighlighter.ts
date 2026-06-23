@@ -48,7 +48,7 @@ export function useReviewHighlighter(
     const handleClick = (ann: ReviewAnnotation) => openAnnotation(ann);
 
     const count = applyHighlightsToDOM(container, annotations, handleClick);
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.debug(`[useReviewHighlighter] applied ${count} highlight(s)`);
     }
 
