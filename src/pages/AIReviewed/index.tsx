@@ -10,7 +10,7 @@ export const AIReviewedList: React.FC = () => (
       <p className="text-sm text-gray-500 mt-1">Reports that have been AI-reviewed and are awaiting human review</p>
     </div>
     <ReportGrid
-      statuses={[ReportStatus.NeedsHumanReview]}
+      statuses={[ReportStatus.NeedsHumanReview, ReportStatus.AIReviewed, ReportStatus.Generated]}
       emptyTitle="No reports awaiting review"
       emptyText="All AI-reviewed reports have been assigned a human decision."
     />
