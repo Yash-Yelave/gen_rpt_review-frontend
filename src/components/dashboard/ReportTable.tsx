@@ -24,7 +24,8 @@ export const ReportTable: React.FC = () => {
     return reports.filter((r) => {
       const isAwaitingReview =
         r.status === ReportStatus.NeedsHumanReview ||
-        r.status === ReportStatus.AIReviewed;
+        r.status === ReportStatus.AIReviewed ||
+        r.status === ReportStatus.Generated;
       const isInProgress = r.humanStatus === 'In Progress';
       return isAwaitingReview || isInProgress;
     });
