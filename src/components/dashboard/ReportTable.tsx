@@ -46,8 +46,9 @@ export const ReportTable: React.FC = () => {
 
   // humanStatus takes priority: if review has been saved it shows "In Progress"
   // otherwise the report is still awaiting a first review
-  const getDisplayStatus = (_status: string, humanStatus: string): string => {
+  const getDisplayStatus = (status: string, humanStatus: string): string => {
     if (humanStatus === 'In Progress') return 'In Progress';
+    if (status === ReportStatus.Generated) return 'Generated';
     return 'Needs Human Review';
   };
 
