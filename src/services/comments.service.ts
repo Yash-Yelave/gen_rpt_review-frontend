@@ -1,19 +1,20 @@
 // src/services/comments.service.ts
 // Replaces the in-memory mockData-backed implementation with
-// Cloudflare Pages Function API calls backed by R2 storage.
+// FastAPI backend calls.
 // Public interface is IDENTICAL to the previous mock.
 
 import type { Comment } from '@/types';
+import { api } from '@/api/client';
 
 export const commentsService = {
   /**
-   * GET /api/reports/:id/comments
+   * GET /api/v1/reports/:id/comments
    * Returns the live Comment[] thread for the report.
    * Returns [] gracefully if the report has no comments file.
    */
   async getByReportId(reportId: string): Promise<Comment[]> {
     try {
-      const res = await fetch(`/api/reports/${reportId}/comments`);
+      const res = await api.get(`/reports/${reportId}/comments`);
       if (!res.ok) return [];
       return res.json() as Promise<Comment[]>;
     } catch {
@@ -22,29 +23,21 @@ export const commentsService = {
   },
 
   /**
-   * POST /api/reports/:id/comments  (body = full Comment object)
-   * Appends the comment to the thread in R2 and returns the updated array.
+   * POST /api/v1/reports/:id/comments  (body = full Comment object)
+   * Appends the comment to the thread and returns the updated array.
    */
   async addComment(reportId: string, comment: Comment): Promise<Comment[]> {
-    const res = await fetch(`/api/reports/${reportId}/comments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(comment),
-    });
+    const res = await api.post(`/reports/${reportId}/comments`, comment);
     if (!res.ok) throw new Error(`Failed to add comment (${res.status})`);
     return res.json() as Promise<Comment[]>;
   },
 
   /**
-   * POST /api/reports/:id/comments  { _action: 'resolve', commentId }
-   * Transitions the target comment to 'resolved' status in R2.
+   * POST /api/v1/reports/:id/comments  { _action: 'resolve', commentId }
+   * Transitions the target comment to 'resolved' status.
    */
   async resolveComment(reportId: string, commentId: string): Promise<Comment[]> {
-    const res = await fetch(`/api/reports/${reportId}/comments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ _action: 'resolve', commentId }),
-    });
+    const res = await api.post(`/reports/${reportId}/comments`, { _action: 'resolve', commentId });
     if (!res.ok) throw new Error(`Failed to resolve comment (${res.status})`);
     return res.json() as Promise<Comment[]>;
   },
