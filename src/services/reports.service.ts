@@ -13,7 +13,7 @@ export const reportsService = {
    * List pages, dashboard counts, and sidebar badges all read from here.
    */
   async getAll(): Promise<Report[]> {
-    const res = await api.get('/reports');
+    const res = await api.get('/reports/');
     const body = await res.json();
     return (body.data || []) as Report[];
   },
