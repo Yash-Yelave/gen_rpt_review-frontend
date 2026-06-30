@@ -1,26 +1,23 @@
 // src/services/reviews.service.ts
 // Replaces the in-memory mockData-backed implementation with
-// Cloudflare Pages Function API calls backed by R2 storage.
+// FastAPI backend calls.
 // Public interface is IDENTICAL to the previous mock — same method
 // signatures and return types — so all hooks and components are unaffected.
 //
-// All state transitions POST to /api/reports/:id/status with the relevant
+// All state transitions POST to /api/v1/reports/:id/status with the relevant
 // field patch.  Comment creation for regeneration requests goes through
 // commentsService so the comments thread is kept consistent.
 
 import { commentsService } from './comments.service';
 import type { Comment } from '@/types';
 import { uid } from '@/utils/formatters';
+import { api } from '@/api/client';
 
 async function postStatus(
   reportId: string,
   patch: { status?: string; humanStatus?: string; publishReady?: boolean }
 ): Promise<void> {
-  const res = await fetch(`/api/reports/${reportId}/status`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(patch),
-  });
+  const res = await api.post(`/reports/${reportId}/status`, patch);
   if (!res.ok) throw new Error(`Status update failed (${res.status})`);
 }
 
