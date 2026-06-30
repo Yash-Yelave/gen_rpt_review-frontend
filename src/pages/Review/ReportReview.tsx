@@ -7,6 +7,7 @@ import { useReviewStore } from '@/store/reviewStore';
 import { ReviewTopbar } from '@/components/review/ReviewTopbar';
 import { ReportPreview } from '@/components/report/ReportPreview';
 import { HumanReviewCard } from '@/components/review/HumanReviewCard';
+import { VersionHistoryPanel } from '@/components/review/VersionHistoryPanel';
 import { CommentThread } from '@/components/comments/CommentThread';
 import { EmptyState } from '@/components/common/EmptyState';
 import { FileWarning } from 'lucide-react';
@@ -22,7 +23,7 @@ export const ReportReview: React.FC = () => {
     queryKey: ['review-md', reportId],
     queryFn: async () => {
       if (!reportId) return '';
-      const res = await fetch(`/api/reports/${reportId}/review`);
+      const res = await fetch(`/api/v1/reports/${reportId}/review`);
       if (!res.ok) return '';
       return res.text();
     },
@@ -70,6 +71,7 @@ export const ReportReview: React.FC = () => {
         {/* Right: Human Review + Comments only */}
         <div className="overflow-y-auto bg-gray-50 border-l border-gray-200">
           <div className="p-4 flex flex-col gap-4">
+            <VersionHistoryPanel report={report} />
             <HumanReviewCard report={report} />
             <CommentThread report={report} />
           </div>
