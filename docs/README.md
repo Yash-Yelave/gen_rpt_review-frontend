@@ -12,6 +12,7 @@ To help you understand the architecture, design patterns, and workflows of the a
 | **[Component Guide](file:///d:/BlueOcean/gen_rpt_review-frontend-main/docs/components.md)** | UI Structure | Deep dive into the 3-panel review canvas, reusable layout shells, and common elements. |
 | **[Highlighting & Navigation](file:///d:/BlueOcean/gen_rpt_review-frontend-main/docs/highlighting_navigation.md)** | Location Syncing | How `review.md` findings are parsed, mapped to DOM paragraphs, and highlighted dynamically. |
 | **[Editorial Workflows](file:///d:/BlueOcean/gen_rpt_review-frontend-main/docs/workflows.md)** | Report Lifecycle | The exact states and actions for Approving, Revising, Rejecting, and Publishing reports. |
+| **[Master Reference Guide](file:///d:/BlueOcean/gen_rpt_review-frontend-main/docs/overall_documentation.md)** | Complete Reference | Full, unified reference covering architecture, workflows, coordinates highlighting, global stores, API functions, and profiles of all 18 UI components. |
 
 ---
 
