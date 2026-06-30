@@ -14,7 +14,8 @@ export const reportsService = {
    */
   async getAll(): Promise<Report[]> {
     const res = await api.get('/reports');
-    return res.json() as Promise<Report[]>;
+    const body = await res.json();
+    return (body.data || []) as Report[];
   },
 
   /**
@@ -24,7 +25,8 @@ export const reportsService = {
   async getById(id: string): Promise<Report | null> {
     const res = await api.get(`/reports/${id}`);
     if (res.status === 404) return null;
-    return res.json() as Promise<Report | null>;
+    const body = await res.json();
+    return body.data as Report | null;
   },
 
   /**
@@ -33,7 +35,8 @@ export const reportsService = {
    */
   async updateStatus(id: string, status: string): Promise<Report> {
     const res = await api.post(`/reports/${id}/status`, { status });
-    return res.json() as Promise<Report>;
+    const body = await res.json();
+    return body.data as Report;
   },
 
   /**
@@ -42,7 +45,8 @@ export const reportsService = {
    */
   async updateHumanStatus(id: string, humanStatus: string): Promise<Report> {
     const res = await api.post(`/reports/${id}/status`, { humanStatus });
-    return res.json() as Promise<Report>;
+    const body = await res.json();
+    return body.data as Report;
   },
 
   /**
@@ -51,6 +55,7 @@ export const reportsService = {
    */
   async setPublishReady(id: string, ready: boolean): Promise<Report> {
     const res = await api.post(`/reports/${id}/status`, { publishReady: ready });
-    return res.json() as Promise<Report>;
+    const body = await res.json();
+    return body.data as Report;
   },
 };

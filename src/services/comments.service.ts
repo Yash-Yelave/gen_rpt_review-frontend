@@ -16,7 +16,8 @@ export const commentsService = {
     try {
       const res = await api.get(`/reports/${reportId}/comments`);
       if (!res.ok) return [];
-      return res.json() as Promise<Comment[]>;
+      const body = await res.json();
+      return (body.data || []) as Comment[];
     } catch {
       return [];
     }
@@ -29,7 +30,8 @@ export const commentsService = {
   async addComment(reportId: string, comment: Comment): Promise<Comment[]> {
     const res = await api.post(`/reports/${reportId}/comments`, comment);
     if (!res.ok) throw new Error(`Failed to add comment (${res.status})`);
-    return res.json() as Promise<Comment[]>;
+    const body = await res.json();
+    return (body.data || []) as Comment[];
   },
 
   /**
@@ -39,6 +41,7 @@ export const commentsService = {
   async resolveComment(reportId: string, commentId: string): Promise<Comment[]> {
     const res = await api.post(`/reports/${reportId}/comments`, { _action: 'resolve', commentId });
     if (!res.ok) throw new Error(`Failed to resolve comment (${res.status})`);
-    return res.json() as Promise<Comment[]>;
+    const body = await res.json();
+    return (body.data || []) as Comment[];
   },
 };

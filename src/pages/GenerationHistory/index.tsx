@@ -22,8 +22,8 @@ export const GenerationHistory: React.FC = () => {
       try {
         const res = await api.get('/generation/jobs');
         if (res.ok) {
-          const data = await res.json();
-          setJobs(data);
+          const body = await res.json();
+          setJobs(body.data || []);
         }
       } catch (error) {
         console.error('Failed to fetch generation jobs', error);
