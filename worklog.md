@@ -64,3 +64,24 @@
 - **CORS Redirect Mitigation** ([reports.service.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/services/reports.service.ts)): Solved frontend-backend CORS blocks by appending trailing slashes to list routes, avoiding browser-rejected 307 redirects.
 - **Approval Pipeline Overhaul** ([HumanReviewCard.tsx](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/components/review/HumanReviewCard.tsx), [reviews.service.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/services/reviews.service.ts)): Redesigned the human review card workflow to separate local state selections from backend submission. Added a **Save Approval** action to queue reports in the Approved tab, and fixed the **Publish Report** button to correctly transition report statuses to `Published`.
 
+# Developer Worklog — July 2, 2026
+
+### 1. Phase 14 — GateX / MENA Compass Enterprise Publishing Integration (Backend)
+
+- **GateX Configuration** ([config.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/core/config.py)): Added 7 environment variables for GateX integration (`GATEX_BASE_URL`, `GATEX_API_KEY`, `GATEX_TIMEOUT`, `GATEX_MAX_RETRIES`, `GATEX_VERIFY_UPLOAD`, `GATEX_ENABLE_PUBLISHING`, `GATEX_DEFAULT_COVER_PATH`). Master switch defaults to `false` for safe off-by-default behavior.
+
+- **Publish Lifecycle Enums** ([enums.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/models/enums.py)): Added `PublishStatusType` enum with 8 new states: `publishing`, `published`, `publish_failed`, `external_sync_pending`, `external_sync_failed`, `unpublishing`, `unpublished`, `rejected`.
+
+- **GateXPublication Model** ([workflow.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/models/workflow.py)): Added `GateXPublication` SQLAlchemy model to persist external identifiers (`external_report_id`, `original_object_key`, `cover_image_key`) returned by the GateX API, along with full publication audit fields.
+
+- **Taxonomy Cache Service** ([services/gatex_taxonomy.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/services/gatex_taxonomy.py)): NEW — in-memory TTL cache (1 hour) for GateX public taxonomy endpoints (categories, tags, regions, industries). Includes smart category/tag/region ID resolution helpers with fallback logic. Uses paginated fetches to retrieve all items regardless of dataset size.
+
+- **GateX API Client** ([services/gatex.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/services/gatex.py)): NEW — implements the exact 5-step MENA Compass Bulk Report Ingestion API flow: presign URL request, direct storage PUT upload, and bulk metadata submission. Includes exponential backoff retry strategy for transient 5xx/timeout errors, non-retryable error handling for 401/403/400, 207 Multi-Status partial failure support, and an unpublish abstraction layer that clearly marks the operation as pending external API support.
+
+- **Publish Orchestrator** ([services/publish_orchestrator.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/services/publish_orchestrator.py)): NEW — 15-step publish pipeline: eligibility validation → duplicate protection → R2 file fetch → presign/upload PDF → presign/upload cover → taxonomy resolution → metadata submission → external ID storage → internal status update → audit logging. Failure at any step preserves uploaded object keys for safe retry without duplication.
+
+- **Publishing API Endpoints** ([endpoints/publishing.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/api/v1/endpoints/publishing.py)): Replaced stub with 7 full endpoints: `POST /publish/{id}`, `POST /unpublish/{id}`, `GET /publish/{id}/status`, `GET /publish/history`, `GET /publish/logs/{id}`, `GET /publish/taxonomy/status`, `POST /publish/taxonomy/refresh`.
+
+- **Router Update** ([router.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/api/v1/router.py)): Changed publishing router prefix from `/reports` to root-level so endpoints resolve at `/api/v1/publish/*` as specified.
+
+- **Integration Documentation** ([docs/gatex_publishing_integration.md](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/docs/gatex_publishing_integration.md)): Complete operational documentation covering architecture, publishing sequence, API mapping, field mapping, state machine, error handling, retry strategy, audit model, external ID mapping, configuration reference, known limitations, and future enhancements.
