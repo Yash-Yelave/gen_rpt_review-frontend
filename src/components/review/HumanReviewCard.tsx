@@ -1,6 +1,6 @@
 // src/components/review/HumanReviewCard.tsx
 import React, { useState } from 'react';
-import { User, Send, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
+import { User, Send, CheckCircle, AlertTriangle, XCircle, Loader2 } from 'lucide-react';
 import { SectionCard } from '@/components/common/SectionCard';
 import { useReviewStore } from '@/store/reviewStore';
 import { useReviewActions } from '@/hooks/useReviewActions';
@@ -180,8 +180,11 @@ export const HumanReviewCard: React.FC<Props> = ({ report }) => {
               disabled={actions.sendToPublish.isPending || actions.markDone.isPending}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded hover:bg-gray-50 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
             >
-              <Send className="w-4 h-4" />
-              Publish Report Instantly
+              {actions.sendToPublish.isPending ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Publishing…</>
+              ) : (
+                <><Send className="w-4 h-4" /> Publish Report Instantly</>
+              )}
             </button>
           </div>
         )}
