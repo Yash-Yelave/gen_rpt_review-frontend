@@ -29,3 +29,38 @@
 ### 3. Defensive Schema Normalization & Robustness
 - **API Error Logging Overhaul**: Rewrote error handling in the R2 client to explicitly log and bubble up `aws4fetch` errors, preventing blank dashboard tables.
 - **Aggressive Schema Normalizer**: Implemented deep-level schema normalization in the report details endpoint ([id].ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/functions/api/reports/%5Bid%5D.ts)) to resolve UI crashes (e.g. `TypeError: Cannot read properties of undefined (reading 'length')` and `overall_score`). It dynamically maps inconsistent AI-generated JSON payloads, gracefully handling missing structures, scores, and variations in key names (such as `improvement_tasks` vs `priority_improvements`).
+
+# Developer Worklog — June 28, 2026
+
+- **Planning & Architecture Design**: Focused on backend-to-frontend api mapping, API route design, and database schema diagrams for the upcoming FastAPI integration. No code changes were committed on this day.
+
+# Developer Worklog — June 29, 2026
+
+### 1. Database Schema & Backend Architecture Initialization
+- **SQLAlchemy Models** ([models/](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/models/)): Defined base SQLAlchemy database models, including domain enums, user identities, document structures, and AI review workflows.
+- **Alembic Migration Setup** ([alembic/](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/alembic/)): Initialized Alembic database migration management configurations, configured async migration environments, and auto-generated initial schemas.
+- **Service & Repository Pattern** ([repositories/](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/repositories/), [services/](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/services/)): Implemented the base repository pattern (`UserRepository`, `DocumentRepository`) and a core `DocumentService` to handle document creation and initial versioning.
+- **FastAPI Core Foundation** ([main.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/main.py)): Scaffolded the initial FastAPI project structure, loaded environment configurations, added core database middlewares, and implemented initial unit and integration testing with `pytest`.
+
+# Developer Worklog — June 30, 2026
+
+### 1. Report Generation Jobs Module (Backend)
+- **Generation API Endpoints** ([endpoints/generation.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/api/v1/endpoints/generation.py)): Implemented the backend generation module with endpoints to manage report generation jobs (`generation_jobs`, workflow instances, publishing tasks).
+
+### 2. Frontend Layout & UI Integration
+- **Frontend Dashboard Overview** ([Dashboard/index.tsx](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/pages/Dashboard/index.tsx)): Developed the dashboard home view featuring stats cards (Total, Pending, Needs Revision, Rejected) and a paginated data table for active review reports.
+- **Frontend AI Paragraph Editing** ([ReportPreview.tsx](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/components/report/ReportPreview.tsx)): Created the interactive document preview and the paragraph editing toolbar allowing editors to request section regeneration.
+- **Version History Panel** ([VersionHistoryPanel.tsx](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/components/review/VersionHistoryPanel.tsx)): Designed the side panel displaying version lineages, dates, and author metadata for active documents.
+- **FastAPI Service Integrations** ([services/](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/services/)): Swapped out local frontend mock storage for live Axios/Fetch service calls matching the backend contract (`reports`, `reviews`, `comments`, `publish`).
+
+# Developer Worklog — July 1, 2026
+
+### 1. Backend Lifecycle & Endpoint Integrations (Backend)
+- **API Lifecycle & CORS** ([main.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/main.py)): Completed backend setup with FastAPI startup/shutdown lifecycles, and added CORS middleware to allow origins from Cloudflare Pages.
+- **Job Control Endpoints** ([endpoints/generation.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/api/v1/endpoints/generation.py)): Finalized the backend generation API with support for creating, tracking, retrying, and cancelling generation jobs.
+- **API Response Fixes** ([endpoints/reports.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/api/v1/endpoints/reports.py), [endpoints/reviews.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/api/v1/endpoints/reviews.py), [endpoints/comments.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/api/v1/endpoints/comments.py)): Resolved 500 internal server errors by eliminating a duplicate signature in `list_reports` and fixed 422 entity errors on `/comments` by swapping UUID validation for string types on mock IDs and commenting out shadowing duplicate routes in `reviews.py`.
+
+### 2. Frontend Pipeline & Approval UX Flow (Frontend)
+- **CORS Redirect Mitigation** ([reports.service.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/services/reports.service.ts)): Solved frontend-backend CORS blocks by appending trailing slashes to list routes, avoiding browser-rejected 307 redirects.
+- **Approval Pipeline Overhaul** ([HumanReviewCard.tsx](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/components/review/HumanReviewCard.tsx), [reviews.service.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/services/reviews.service.ts)): Redesigned the human review card workflow to separate local state selections from backend submission. Added a **Save Approval** action to queue reports in the Approved tab, and fixed the **Publish Report** button to correctly transition report statuses to `Published`.
+
