@@ -9,6 +9,7 @@ import { PublishedList } from '@/pages/Published';
 import { RevisionsList } from '@/pages/Revisions';
 import { RejectedList } from '@/pages/Rejected';
 import { Settings } from '@/pages/Settings';
+import { GenerationHistory } from '@/pages/GenerationHistory';
 
 export const router = createBrowserRouter([
   {
@@ -17,6 +18,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <Dashboard /> },
+      { path: 'generation-history', element: <GenerationHistory /> },
       { path: 'ai-reviewed', element: <AIReviewedList /> },
       { path: 'review/:reportId', element: <ReportReview /> },
       { path: 'approved', element: <ApprovedReportsList /> },

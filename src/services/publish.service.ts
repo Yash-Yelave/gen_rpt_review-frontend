@@ -1,9 +1,10 @@
 // src/services/publish.service.ts
 // Replaces the in-memory mockData-backed implementation with
-// Cloudflare Pages Function API calls backed by R2 storage.
+// FastAPI backend calls.
 // Public interface is IDENTICAL to the previous mock.
 
 import type { PublishRecord } from '@/types';
+import { api } from '@/api/client';
 
 export const publishService = {
   /**
@@ -15,13 +16,9 @@ export const publishService = {
     publishedBy: string,
     version: string
   ): Promise<PublishRecord> {
-    const res = await fetch(`/api/reports/${reportId}/status`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        status: 'Published',
-        publishReady: true,
-      }),
+    const res = await api.post(`/reports/${reportId}/status`, {
+      status: 'Published',
+      publishReady: true,
     });
     if (!res.ok) {
       throw new Error(`Publish failed (${res.status})`);
@@ -38,8 +35,7 @@ export const publishService = {
 
   /**
    * Returns the publish log.
-   * Currently returns an empty array — publish history is not yet
-   * persisted to R2.  A future iteration can store publish-log.json.
+   * Currently returns an empty array. A future iteration can fetch publish history.
    */
   async getPublishLog(): Promise<PublishRecord[]> {
     return [];

@@ -6,6 +6,7 @@
 import React, { useEffect, useRef } from 'react';
 import { paragraphId } from '@/utils/locationParser';
 import { useReportNavStore } from '@/store/reportNavigationStore';
+import { AIEditingToolbar } from '@/components/review/AIEditingToolbar';
 
 interface ReportParagraphProps {
   id: string;
@@ -31,15 +32,18 @@ const ReportParagraph: React.FC<ReportParagraphProps> = ({
   }, [isHighlighted, onHighlightDone]);
 
   return (
-    <p
-      id={id}
-      ref={ref}
-      className={`mb-3 text-gray-700 transition-all duration-300 ${
-        isHighlighted ? 'para-highlighted' : ''
-      }`}
-    >
-      {children}
-    </p>
+    <div className="relative group">
+      <AIEditingToolbar paragraphId={id} currentText={typeof children === 'string' ? children : ''} />
+      <p
+        id={id}
+        ref={ref}
+        className={`mb-3 text-gray-700 transition-all duration-300 ${
+          isHighlighted ? 'para-highlighted' : ''
+        }`}
+      >
+        {children}
+      </p>
+    </div>
   );
 };
 

@@ -2,6 +2,7 @@
 import React from 'react';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { ReportTable } from '@/components/dashboard/ReportTable';
+import { NewReportPanel } from '@/components/dashboard/NewReportPanel';
 import { useDashboardMetrics } from '@/hooks/useReports';
 import { formatDate } from '@/utils/formatters';
 
@@ -26,6 +27,8 @@ export const Dashboard: React.FC = () => {
         <StatCard label="Approved Reports" value={metrics.approvedReports} meta="Ready to publish" accent="green" />
         <StatCard label="Needs Revision" value={metrics.needsRevision} meta="Awaiting revision" accent="orange" />
       </div>
+
+      <NewReportPanel />
 
       <ReportTable />
     </div>
