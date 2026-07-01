@@ -41,6 +41,11 @@ export function useReviewActions(reportId: string) {
     onSuccess: invalidate,
   });
 
+  const unpublishReport = useMutation({
+    mutationFn: () => reviewsService.unpublishReport(reportId),
+    onSuccess: invalidate,
+  });
+
   const submitComment = useMutation({
     mutationFn: (comment: Omit<Comment, 'id' | 'timestamp' | 'status'>) =>
       commentsService.addComment(reportId, {
@@ -57,5 +62,6 @@ export function useReviewActions(reportId: string) {
     onSuccess: invalidate,
   });
 
-  return { saveReview, markDone, sendToPublish, requestRegeneration, rejectReport, submitComment, resolveComment };
+  return { saveReview, markDone, sendToPublish, requestRegeneration, rejectReport, unpublishReport, submitComment, resolveComment };
 }
+

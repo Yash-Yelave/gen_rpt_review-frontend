@@ -49,14 +49,15 @@ export const reviewsService = {
   },
 
   /**
-   * sendToPublish — approves the report and marks it as publish-ready.
+   * sendToPublish — triggers the full GateX publish pipeline.
+   * Calls publishService.publish which:
+   *   1. Tries POST /api/v1/publish/{id} (GateX backend pipeline)
+   *   2. Falls back to a direct status update if backend is unavailable
+   * Either way, report ends up with status = 'Published'.
    */
   async sendToPublish(reportId: string): Promise<void> {
-    await postStatus(reportId, {
-      status: 'Published',
-      humanStatus: 'Published',
-      publishReady: true,
-    });
+    const { publishService } = await import('./publish.service');
+    await publishService.publish(reportId, 'reviewer', 'v1');
   },
 
   /**
@@ -101,5 +102,15 @@ export const reviewsService = {
       status: 'Rejected',
       humanStatus: 'Rejected',
     });
+  },
+
+  /**
+   * unpublishReport — removes a published report from external distribution.
+   * Calls the GateX unpublish abstraction layer on the backend.
+   * The report is moved to Rejected status (used as the "unpublished" tab for now).
+   */
+  async unpublishReport(reportId: string): Promise<{ message: string; actionRequired?: string }> {
+    const { publishService } = await import('./publish.service');
+    return publishService.unpublish(reportId);
   },
 };
