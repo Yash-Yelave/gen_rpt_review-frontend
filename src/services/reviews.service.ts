@@ -45,6 +45,7 @@ export const reviewsService = {
     await postStatus(reportId, {
       status: 'Approved',
       humanStatus: 'Approved',
+      publishReady: true,
     });
   },
 
