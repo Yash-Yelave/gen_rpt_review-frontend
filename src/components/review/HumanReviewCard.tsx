@@ -163,13 +163,25 @@ export const HumanReviewCard: React.FC<Props> = ({ report }) => {
                 This report is approved and ready for publishing.
               </span>
             </div>
+            
+            <button
+              onClick={async () => {
+                await actions.markDone.mutateAsync();
+                showToast('Report marked as approved', 'success');
+              }}
+              disabled={actions.markDone.isPending || actions.sendToPublish.isPending}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-green-600 text-white text-sm font-semibold rounded hover:bg-green-700 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500/50 mb-2"
+            >
+              Save Approval
+            </button>
+
             <button
               onClick={handlePublish}
-              disabled={actions.sendToPublish.isPending}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-700 text-white text-sm font-semibold rounded hover:bg-blue-800 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+              disabled={actions.sendToPublish.isPending || actions.markDone.isPending}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded hover:bg-gray-50 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
             >
               <Send className="w-4 h-4" />
-              Publish Report
+              Publish Report Instantly
             </button>
           </div>
         )}

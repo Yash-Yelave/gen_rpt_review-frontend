@@ -53,8 +53,8 @@ export const reviewsService = {
    */
   async sendToPublish(reportId: string): Promise<void> {
     await postStatus(reportId, {
-      status: 'Approved',
-      humanStatus: 'Approved',
+      status: 'Published',
+      humanStatus: 'Published',
       publishReady: true,
     });
   },
