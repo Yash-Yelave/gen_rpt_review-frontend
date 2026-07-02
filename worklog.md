@@ -85,3 +85,28 @@
 - **Router Update** ([router.py](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/app/api/v1/router.py)): Changed publishing router prefix from `/reports` to root-level so endpoints resolve at `/api/v1/publish/*` as specified.
 
 - **Integration Documentation** ([docs/gatex_publishing_integration.md](file:///d:/BlueOcean/gen_rpt-main/report-management-backend/docs/gatex_publishing_integration.md)): Complete operational documentation covering architecture, publishing sequence, API mapping, field mapping, state machine, error handling, retry strategy, audit model, external ID mapping, configuration reference, known limitations, and future enhancements.
+
+# Developer Worklog — June 28, 2026
+- Worked exclusively on the report generation and publishing system, addressing core architecture issues.
+
+# Developer Worklog — June 29, 2026
+- Continued development on the report management backend, specifically targeting API endpoints for report ingestion.
+
+# Developer Worklog — June 30, 2026
+- Focused on integrating and refining the AI Review pipeline and mock data structures for report states.
+
+# Developer Worklog — July 1, 2026
+- Implemented and finalized the GateX publishing pipeline integration, validating mock endpoints and real R2 file connections for end-to-end publish flow testing.
+
+
+# Developer Worklog - July 2, 2026 (Part 2)
+
+### 1. GateX Publishing Pipeline Fixes (Backend)
+- **Duplicate Protection Fix** (`publish_orchestrator.py`): Fixed the duplicate protection logic that incorrectly blocked re-publishing reports after a successful publish. Changed successful publish status from `external_sync_pending` to `published`. Duplicate check now correctly allows retries if a previous attempt resulted in `publish_failed` or `unpublished`.
+- **Database Reconciliation** (`endpoints/reports.py`): Modified `list_reports` to cross-check in-memory `MOCK_REPORTS` against the persisted `gatex_publications` database table. This ensures the `Published` and `Rejected` (unpublished) statuses survive Render server restarts.
+- **Unpublish Abstraction Fix** (`endpoints/reports.py`): Updated the `update_report_status` endpoint to mark an unpublished report as `re_approved` in the database when a user clicks "Approve". This prevents the DB reconciliation logic from continuously overriding the manual approval back to "Rejected".
+- **API Payload Validation** (`gatex.py`, `publish_orchestrator.py`): Resolved GateX `422/207` payload validation failures by setting the `price` field to `5800.0` (GateX minimum requirement). Also improved error logging for `207 Multi-Status` responses to extract and display field-level validation details (e.g., "price must be >= 5800").
+- **Endpoint Response Codes** (`endpoints/publishing.py`): Fixed the publish endpoint to return HTTP 422 with structured error details instead of a 200 OK when GateX submission fails. Includes the external ID directly in the success message.
+
+### 2. Frontend Publish Service Fixes (Frontend)
+- **Error Handling Transparency** (`api/client.ts`, `services/publish.service.ts`): Updated the API client to pass HTTP 422 responses through rather than throwing generic errors. Modified the publish service to extract the real error message from the backend and display it to the user in the UI, rather than silently falling back to a local status update.
