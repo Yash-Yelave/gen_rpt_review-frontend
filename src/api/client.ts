@@ -22,7 +22,8 @@ export async function apiClient(endpoint: string, options?: RequestInit): Promis
     headers,
   });
 
-  if (!res.ok && res.status !== 404) {
+  // Don't throw on 404 (caller checks res.ok) or 422 (structured error body — caller reads detail)
+  if (!res.ok && res.status !== 404 && res.status !== 422) {
     throw new Error(`API error ${res.status}: ${url}`);
   }
 
