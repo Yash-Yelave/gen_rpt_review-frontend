@@ -16,9 +16,10 @@ import { api } from '@/api/client';
 
 /**
  * Attempts to publish via the GateX backend pipeline.
- * Falls back to a direct status update if the backend publish endpoint is unavailable.
+ * Falls back to a direct status update ONLY if the backend is completely unreachable (network error).
+ * If the backend is reachable but GateX fails, throws an error with the real reason.
  */
-async function publishViaBackend(reportId: string): Promise<{ ok: boolean; externalReportId?: number; publishStatus?: string }> {
+async function publishViaBackend(reportId: string): Promise<{ ok: boolean; externalReportId?: number; publishStatus?: string; externalStatus?: string; gatexError?: string }> {
   try {
     const res = await api.post(`/publish/${reportId}`);
     if (res.ok) {
@@ -27,12 +28,23 @@ async function publishViaBackend(reportId: string): Promise<{ ok: boolean; exter
         ok: true,
         externalReportId: body?.data?.external_report_id,
         publishStatus: body?.data?.publish_status,
+        externalStatus: body?.data?.external_status,
       };
     }
-    // Backend returned an error — log and fall through to fallback
+    // 422 = GateX pipeline failed with a known error — do NOT fall back, throw so user sees real reason
+    if (res.status === 422) {
+      const body = await res.json().catch(() => ({}));
+      const errMsg = body?.detail?.error ?? body?.detail ?? `GateX publish failed (HTTP ${res.status})`;
+      throw new Error(errMsg);
+    }
+    // Other 4xx/5xx — log and fall through to fallback
     console.warn(`[publishService] Backend publish endpoint returned ${res.status}. Falling back to status update.`);
     return { ok: false };
   } catch (err) {
+    // If error was thrown deliberately above, rethrow it
+    if (err instanceof Error && err.message.includes('GateX')) {
+      throw err;
+    }
     console.warn('[publishService] Backend publish endpoint unreachable:', err);
     return { ok: false };
   }
@@ -40,7 +52,8 @@ async function publishViaBackend(reportId: string): Promise<{ ok: boolean; exter
 
 /**
  * Fallback: marks the report as Published via the R2 Cloudflare status endpoint.
- * This is used when the backend GateX pipeline is disabled or unavailable.
+ * This is used ONLY when the backend is completely unreachable (network/deploy issue).
+ * NOT called when GateX itself rejects the report.
  */
 async function publishViaStatusFallback(reportId: string): Promise<void> {
   const res = await api.post(`/reports/${reportId}/status`, {
@@ -57,18 +70,18 @@ export const publishService = {
   /**
    * Publishes a report.
    * 1. Tries the GateX backend pipeline (POST /api/v1/publish/{id}).
-   * 2. If that fails or is disabled, falls back to a direct R2 status update.
-   * Either way, the report ends up with status = 'Published' in the system.
+   * 2. If the backend is completely unreachable (network error), falls back to direct R2 status update.
+   * 3. If GateX pipeline returns a real error (422), throws that error — no silent fallback.
    */
   async publish(
     reportId: string,
     publishedBy: string,
     version: string
   ): Promise<PublishRecord> {
-    const backendResult = await publishViaBackend(reportId);
+    const backendResult = await publishViaBackend(reportId); // May throw on GateX errors
 
     if (!backendResult.ok) {
-      // Fallback path: update status directly via Cloudflare R2 function
+      // Fallback path: only reached on network error (backend unreachable)
       await publishViaStatusFallback(reportId);
     }
 
