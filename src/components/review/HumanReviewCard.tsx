@@ -92,6 +92,10 @@ export const HumanReviewCard: React.FC<Props> = ({ report }) => {
   const handleConfirmPublish = async () => {
     setIsConfirmingPublish(true);
     try {
+      if (decision === 'Approved') {
+        // Ensure the backend knows it's approved before attempting to publish
+        await actions.markDone.mutateAsync();
+      }
       await actions.sendToPublish.mutateAsync();
       setPdfPreview(null);
       showToast('Report sent to publish queue', 'success');
