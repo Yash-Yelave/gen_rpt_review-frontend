@@ -11,6 +11,7 @@ import {
   Settings,
   Waves,
   History,
+  Layers,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useDashboardMetrics } from '@/hooks/useReports';
@@ -18,6 +19,7 @@ import { useDashboardMetrics } from '@/hooks/useReports';
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/generation-history', label: 'Generation History', icon: History },
+  { to: '/bulk-generate', label: 'Bulk Generate', icon: Layers },
   { to: '/ai-reviewed', label: 'AI Reviewed', icon: Bot, badge: 'pendingHuman' },
   { to: '/approved', label: 'Approved Reports', icon: CheckCircle },
   { to: '/revisions', label: 'Revision Queue', icon: RotateCcw, badge: 'needsRevision' },
