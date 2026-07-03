@@ -36,12 +36,18 @@ export const reviewsService = {
           instructions: revisionData.text,
         });
         if (!res.ok) throw new Error(`Revision failed (${res.status})`);
+        
+        // Since revision was applied instantly, set status back to Needs Human Review
+        await postStatus(reportId, {
+          status: 'Needs Human Review',
+          humanStatus: 'Pending Editorial Approval',
+        });
+      } else {
+        await postStatus(reportId, {
+          status: 'Needs Revision',
+          humanStatus: 'Needs Revision',
+        });
       }
-      
-      await postStatus(reportId, {
-        status: 'Needs Revision',
-        humanStatus: 'Needs Revision',
-      });
     } else {
       await postStatus(reportId, { humanStatus: 'In Progress' });
     }
