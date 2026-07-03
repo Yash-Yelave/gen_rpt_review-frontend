@@ -14,13 +14,22 @@ interface Props {
 
 export const ReviewTopbar: React.FC<Props> = ({ report }) => {
   const navigate = useNavigate();
-  const { decision } = useReviewStore();
+  const { decision, commentText, commentSection } = useReviewStore();
   const { showToast } = useUIStore();
   const { saveReview } = useReviewActions(report.id);
 
   const handleSave = async () => {
-    if (decision) {
-      await saveReview.mutateAsync(decision);
+    if (decision === 'Needs Revision') {
+      if (!commentText.trim()) {
+        showToast('Please enter revision instructions before saving.', 'error');
+        return;
+      }
+      await saveReview.mutateAsync({
+        decision,
+        revisionData: { text: commentText, section: commentSection }
+      });
+    } else if (decision) {
+      await saveReview.mutateAsync({ decision });
     }
     showToast('Review saved successfully', 'success');
   };
