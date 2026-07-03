@@ -76,7 +76,10 @@ const SEVERITY_RE = /^\[(High|Medium|Low)\]\s*/i;
  * "[High] Vague statements..." → "Vague statements..."
  */
 export function stripSeverity(text: string): string {
-  return text.replace(SEVERITY_RE, '').trim();
+  let stripped = text.replace(SEVERITY_RE, '').trim();
+  // Also strip the formal Location format from the display text
+  stripped = stripped.replace(/Location\s*[→>]\s*\[([^\]]+)\].*$/i, '').trim();
+  return stripped;
 }
 
 /**
