@@ -33,8 +33,8 @@ export interface BulkSubmitResult {
 }
 
 /** Submit a batch of report generation jobs parsed from the CSV. */
-export async function submitBulkJobs(items: BulkJobItem[]): Promise<BulkSubmitResult> {
-  const res = await api.post('/generation/bulk', { jobs: items });
+export async function submitBulkJobs(items: BulkJobItem[], limit?: number): Promise<BulkSubmitResult> {
+  const res = await api.post('/generation/bulk', { jobs: items, limit });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body?.detail || `API error ${res.status}`);

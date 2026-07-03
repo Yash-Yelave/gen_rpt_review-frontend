@@ -114,6 +114,7 @@ export const BulkGenerate: React.FC = () => {
   const [queue, setQueue] = useState<BulkJob[]>([]);
   const [queueLoading, setQueueLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(true);
+  const [limit, setLimit] = useState(20);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -192,14 +193,14 @@ export const BulkGenerate: React.FC = () => {
     setSubmitResult(null);
 
     const items: BulkJobItem[] = validRows
-      .slice(0, MAX_BULK)
+      .slice(0, limit)
       .map((r) => ({ topic: r.topic, industry: r.industry || undefined }));
 
     try {
-      const result = await submitBulkJobs(items);
+      const result = await submitBulkJobs(items, limit);
       const msg = `✅ Dispatched ${result.dispatched} job(s).${
         result.overflow_skipped > 0
-          ? ` ${result.overflow_skipped} skipped (exceeds ${MAX_BULK}-job limit).`
+          ? ` ${result.overflow_skipped} skipped (exceeds ${limit}-job limit).`
           : ''
       }${result.errors.length > 0 ? ` ${result.errors.length} error(s).` : ''}`;
       setSubmitResult(msg);
@@ -286,7 +287,7 @@ export const BulkGenerate: React.FC = () => {
               >
                 {showPreview ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 Preview ({rows.length} rows · {validRows.length} valid
-                {validRows.length > MAX_BULK ? `, first ${MAX_BULK} will be dispatched` : ''})
+                {validRows.length > limit ? `, first ${limit} will be dispatched` : ''})
               </button>
 
               {showPreview && (
@@ -302,7 +303,7 @@ export const BulkGenerate: React.FC = () => {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-50">
                       {rows.map((row, i) => (
-                        <tr key={i} className={row._error ? 'bg-red-50' : i >= MAX_BULK ? 'opacity-40' : ''}>
+                        <tr key={i} className={row._error ? 'bg-red-50' : i >= limit ? 'opacity-40' : ''}>
                           <td className="px-4 py-2 text-gray-400">{i + 1}</td>
                           <td className="px-4 py-2 font-medium text-gray-800 max-w-xs truncate">
                             {row.topic || <span className="text-red-400 italic">empty</span>}
@@ -314,7 +315,7 @@ export const BulkGenerate: React.FC = () => {
                                 <TriangleAlert className="w-3.5 h-3.5" />
                                 {row._error}
                               </span>
-                            ) : i >= MAX_BULK ? (
+                            ) : i >= limit ? (
                               <span className="text-gray-400">Overflow — skipped</span>
                             ) : (
                               <span className="text-green-600 font-medium">✓ Ready</span>
@@ -326,6 +327,33 @@ export const BulkGenerate: React.FC = () => {
                   </table>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Threshold Limit Selector */}
+          {rows.length > 0 && (
+            <div className="mt-6 mb-4 p-4 bg-gray-50 border border-gray-100 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <label className="text-sm font-semibold text-gray-700 block">
+                  Generation Threshold Limit
+                </label>
+                <span className="text-xs text-gray-400">
+                  Select maximum reports to generate in this batch (capped at 20)
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <input
+                  type="range"
+                  min="1"
+                  max={MAX_BULK}
+                  value={limit}
+                  onChange={(e) => setLimit(parseInt(e.target.value) || 1)}
+                  className="w-40 accent-indigo-600"
+                />
+                <span className="bg-white border border-gray-200 rounded px-2.5 py-1 text-sm font-bold text-gray-700 min-w-[36px] text-center">
+                  {limit}
+                </span>
+              </div>
             </div>
           )}
 
@@ -346,7 +374,7 @@ export const BulkGenerate: React.FC = () => {
               )}
               {submitting
                 ? 'Dispatching…'
-                : `Start Generation (${Math.min(validRows.length, MAX_BULK)} job${Math.min(validRows.length, MAX_BULK) !== 1 ? 's' : ''})`}
+                : `Start Generation (${Math.min(validRows.length, limit)} job${Math.min(validRows.length, limit) !== 1 ? 's' : ''})`}
             </button>
 
             {fileName && (
