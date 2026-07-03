@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Sparkles, Maximize2, RotateCw, Loader2, Check } from 'lucide-react';
 import { api } from '@/api/client';
+import { useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Props {
   paragraphId: string;
@@ -10,17 +12,30 @@ interface Props {
 
 export const AIEditingToolbar: React.FC<Props> = ({ paragraphId, currentText }) => {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+  const { reportId } = useParams<{ reportId: string }>();
+  const queryClient = useQueryClient();
 
   const handleAction = async (action: string) => {
+    if (!reportId) {
+      console.error('No reportId found in route');
+      return;
+    }
+    
     setStatus('loading');
     try {
       // Send the editing request to the FastAPI backend
       await api.post('/reports/edit', {
+        documentId: reportId,
         action,
         paragraphId,
         text: currentText,
       });
+      
       setStatus('success');
+      
+      // Invalidate the query to force a re-fetch of the report with the newly edited block
+      queryClient.invalidateQueries({ queryKey: ['report', reportId] });
+      
       setTimeout(() => setStatus('idle'), 2000);
     } catch (err) {
       console.error(`AI ${action} failed:`, err);
@@ -41,7 +56,7 @@ export const AIEditingToolbar: React.FC<Props> = ({ paragraphId, currentText }) 
     return (
       <div className="absolute -top-10 left-0 bg-green-50 border border-green-200 shadow-lg rounded-lg p-2 flex items-center gap-2 text-sm text-green-700 z-10">
         <Check className="w-4 h-4" />
-        Edit queued
+        Edit applied
       </div>
     );
   }
