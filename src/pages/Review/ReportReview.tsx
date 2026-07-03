@@ -16,10 +16,7 @@ import { QUERY_KEYS } from '@/utils/constants';
 
 const AssignmentCard: React.FC<{ report: any }> = ({ report }) => {
   const qc = useQueryClient();
-  const currentUser = useAuthStore((s) => ({
-    email: s.reviewerEmail,
-    name: s.reviewerName,
-  }));
+  const reviewerEmail = useAuthStore((s) => s.reviewerEmail);
 
   const claimMutation = useMutation({
     mutationFn: () => reportsService.claimReport(report.id),
@@ -30,7 +27,7 @@ const AssignmentCard: React.FC<{ report: any }> = ({ report }) => {
   });
 
   const assigned = report.assignedTo;
-  const isAssignedToMe = assigned && assigned.email === currentUser.email;
+  const isAssignedToMe = assigned && assigned.email === reviewerEmail;
 
   if (!assigned) {
     return (
