@@ -6,7 +6,7 @@ import { useReviewStore } from '@/store/reviewStore';
 import { useReviewActions } from '@/hooks/useReviewActions';
 import { useAuthStore } from '@/store/authStore';
 import { useUIStore } from '@/store/uiStore';
-import { REPORT_SECTIONS, COMMENT_PRIORITIES } from '@/utils/constants';
+import { COMMENT_PRIORITIES } from '@/utils/constants';
 import { PdfReleasePreviewModal } from '@/components/review/PdfReleasePreviewModal';
 import type { PdfReleasePreview } from '@/types';
 import type { Report } from '@/types';
@@ -70,7 +70,18 @@ export const HumanReviewCard: React.FC<Props> = ({ report }) => {
   };
 
   const handleSaveReview = async () => {
-    if (decision) await actions.saveReview.mutateAsync(decision);
+    if (decision === 'Needs Revision') {
+      if (!commentText.trim()) {
+        showToast('Please enter revision instructions before saving.', 'error');
+        return;
+      }
+      await actions.saveReview.mutateAsync({
+        decision,
+        revisionData: { text: commentText, section: commentSection }
+      });
+    } else if (decision) {
+      await actions.saveReview.mutateAsync({ decision });
+    }
     showToast('Review saved successfully', 'success');
   };
 
@@ -259,7 +270,7 @@ export const HumanReviewCard: React.FC<Props> = ({ report }) => {
                 onChange={(e) => setCommentSection(e.target.value)}
                 className="w-full px-3 py-1.5 border border-gray-200 rounded text-sm text-gray-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 bg-white cursor-pointer"
               >
-                {REPORT_SECTIONS.map((s: string) => <option key={s} value={s}>{s}</option>)}
+                {['Overall Report', ...report.reportContent.sections.map(s => s.heading)].map((s: string) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
 

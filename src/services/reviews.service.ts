@@ -27,8 +27,17 @@ export const reviewsService = {
    * 'Needs Revision' → sets both status + humanStatus to 'Needs Revision'.
    * Any other decision → marks humanStatus as 'In Progress' (draft saved).
    */
-  async saveReview(reportId: string, decision: string): Promise<void> {
+  async saveReview(reportId: string, decision: string, revisionData?: { text: string; section: string }): Promise<void> {
     if (decision === 'Needs Revision') {
+      if (revisionData) {
+        // Use the new surgical revision endpoint
+        const res = await api.post(`/reports/${reportId}/revise-section`, {
+          section_heading: revisionData.section,
+          instructions: revisionData.text,
+        });
+        if (!res.ok) throw new Error(`Revision failed (${res.status})`);
+      }
+      
       await postStatus(reportId, {
         status: 'Needs Revision',
         humanStatus: 'Needs Revision',

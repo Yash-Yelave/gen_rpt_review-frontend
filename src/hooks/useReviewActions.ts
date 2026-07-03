@@ -16,7 +16,8 @@ export function useReviewActions(reportId: string) {
   };
 
   const saveReview = useMutation({
-    mutationFn: (decision: string) => reviewsService.saveReview(reportId, decision),
+    mutationFn: (args: { decision: string; revisionData?: { text: string; section: string } }) => 
+      reviewsService.saveReview(reportId, args.decision, args.revisionData),
     onSuccess: invalidate,
   });
 
