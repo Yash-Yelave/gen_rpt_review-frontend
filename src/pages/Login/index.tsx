@@ -28,7 +28,11 @@ export const Login: React.FC = () => {
     setError(null);
 
     try {
-      const res = await api.post('/auth/login', { email, password });
+      const res = await api.post('/auth/login', {
+        email: email,
+        username: email,
+        password: password
+      });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.detail || 'Invalid credentials');
