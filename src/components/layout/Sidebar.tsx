@@ -12,6 +12,7 @@ import {
   Waves,
   History,
   Layers,
+  LogOut,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useDashboardMetrics } from '@/hooks/useReports';
@@ -32,7 +33,7 @@ interface Props {
 }
 
 export const Sidebar: React.FC<Props> = ({ onCloseMobile }) => {
-  const { reviewerName, reviewerRole, getAvatarInitials } = useAuthStore();
+  const { reviewerName, reviewerRole, getAvatarInitials, logout } = useAuthStore();
   const metrics = useDashboardMetrics();
 
   const getBadgeCount = (key: string): number => {
@@ -108,14 +109,26 @@ export const Sidebar: React.FC<Props> = ({ onCloseMobile }) => {
       </nav>
 
       {/* User */}
-      <div className="px-4 py-4 border-t border-gray-200 flex items-center gap-3 md:justify-center lg:justify-start">
-        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
-          {getAvatarInitials()}
+      <div className="px-4 py-4 border-t border-gray-200 flex items-center justify-between gap-3 md:justify-center lg:justify-between w-full">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
+            {getAvatarInitials()}
+          </div>
+          <div className="min-w-0 md:hidden lg:block">
+            <div className="text-sm font-semibold text-gray-800 truncate">{reviewerName || 'Reviewer'}</div>
+            <div className="text-xs text-gray-400">{reviewerRole || 'Staff'}</div>
+          </div>
         </div>
-        <div className="min-w-0 md:hidden lg:block">
-          <div className="text-sm font-semibold text-gray-800 truncate">{reviewerName}</div>
-          <div className="text-xs text-gray-400">{reviewerRole}</div>
-        </div>
+        <button
+          onClick={() => {
+            logout();
+            window.location.reload();
+          }}
+          className="text-gray-400 hover:text-red-600 transition-colors p-1 md:hidden lg:block"
+          title="Sign Out"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
       </div>
     </aside>
   );

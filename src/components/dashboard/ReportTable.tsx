@@ -89,7 +89,7 @@ export const ReportTable: React.FC = () => {
           <table className="w-full border-collapse" aria-label="Active reviews list">
             <thead>
               <tr>
-                {['Report', 'AI Score', 'Review Status', 'Comments', 'Last Updated'].map((h) => (
+                {['Report', 'AI Score', 'Review Status', 'Reviewer', 'Comments', 'Last Updated'].map((h) => (
                   <th
                     key={h}
                     className="bg-gray-50 px-4 py-2 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200 whitespace-nowrap"
@@ -129,6 +129,25 @@ export const ReportTable: React.FC = () => {
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${badgeClass}`}>
                         {displayStatus}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {r.assignedTo ? (
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-[9px] font-bold text-indigo-700 uppercase">
+                            {r.assignedTo.full_name
+                              .split(' ')
+                              .filter(Boolean)
+                              .map((w) => w[0])
+                              .join('')
+                              .slice(0, 2)}
+                          </div>
+                          <span className="text-xs text-gray-700 font-medium">
+                            {r.assignedTo.full_name}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400 italic">Unassigned</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {r.commentCount > 0 ? (

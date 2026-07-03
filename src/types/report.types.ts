@@ -91,6 +91,11 @@ export interface Report {
   aiReview: AIReview | null;
   reportContent: ReportContent;
   comments: Comment[];
+  assignedTo?: {
+    id: string;
+    full_name: string;
+    email: string;
+  } | null;
 }
 
 export interface ReportVersion {

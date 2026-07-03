@@ -58,4 +58,14 @@ export const reportsService = {
     const body = await res.json();
     return body.data as Report;
   },
+
+  /**
+   * POST /api/v1/reports/:id/claim
+   * Claims a report and assigns it to the currently logged in reviewer.
+   */
+  async claimReport(id: string): Promise<Report> {
+    const res = await api.post(`/reports/${id}/claim`);
+    const body = await res.json();
+    return body.data as Report;
+  },
 };

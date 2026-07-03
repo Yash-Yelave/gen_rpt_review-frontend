@@ -1,5 +1,5 @@
-// src/routes/index.tsx
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, useLocation } from 'react-router-dom';
+import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Dashboard } from '@/pages/Dashboard';
 import { AIReviewedList } from '@/pages/AIReviewed';
@@ -11,11 +11,33 @@ import { RejectedList } from '@/pages/Rejected';
 import { Settings } from '@/pages/Settings';
 import { GenerationHistory } from '@/pages/GenerationHistory';
 import { BulkGenerate } from '@/pages/BulkGenerate';
+import { Login } from '@/pages/Login';
+import { useAuthStore } from '@/store/authStore';
+
+// Simple Auth Guard
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const token = useAuthStore((s) => s.token);
+  const location = useLocation();
+
+  if (!token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
 
 export const router = createBrowserRouter([
   {
+    path: '/login',
+    element: <Login />,
+  },
+  {
     path: '/',
-    element: <AppLayout />,
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <Dashboard /> },

@@ -1,6 +1,8 @@
 // src/api/client.ts
 // Centralized API client for the FastAPI backend
 
+import { useAuthStore } from '@/store/authStore';
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 export async function apiClient(endpoint: string, options?: RequestInit): Promise<Response> {
@@ -11,11 +13,10 @@ export async function apiClient(endpoint: string, options?: RequestInit): Promis
     headers.set('Content-Type', 'application/json');
   }
 
-  // Future: Add JWT or other auth headers here if required
-  // const token = localStorage.getItem('auth_token');
-  // if (token) {
-  //   headers.set('Authorization', `Bearer ${token}`);
-  // }
+  const token = useAuthStore.getState().token;
+  if (token) {
+    headers.set('Authorization', token);
+  }
 
   const res = await fetch(url, {
     ...options,
