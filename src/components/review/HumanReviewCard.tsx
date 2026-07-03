@@ -7,6 +7,8 @@ import { useReviewActions } from '@/hooks/useReviewActions';
 import { useAuthStore } from '@/store/authStore';
 import { useUIStore } from '@/store/uiStore';
 import { REPORT_SECTIONS, COMMENT_PRIORITIES } from '@/utils/constants';
+import { PdfReleasePreviewModal } from '@/components/review/PdfReleasePreviewModal';
+import type { PdfReleasePreview } from '@/types';
 import type { Report } from '@/types';
 
 interface Props {
@@ -32,6 +34,10 @@ export const HumanReviewCard: React.FC<Props> = ({ report }) => {
   const setCommentPriority = useReviewStore((s) => s.setCommentPriority);
 
   const [showRejectModal, setShowRejectModal] = useState(false);
+  // ── PDF Release Preview state ────────────────────────────────────────────
+  const [pdfPreview, setPdfPreview] = useState<PdfReleasePreview | null>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [isConfirmingPublish, setIsConfirmingPublish] = useState(false);
 
   const { reviewerName } = useAuthStore();
   const { showToast } = useUIStore();
@@ -68,9 +74,35 @@ export const HumanReviewCard: React.FC<Props> = ({ report }) => {
     showToast('Review saved successfully', 'success');
   };
 
+  // ── Publish: intercept to show PDF preview first ───────────────────────
   const handlePublish = async () => {
-    await actions.sendToPublish.mutateAsync();
-    showToast('Report sent to publish queue', 'success');
+    setIsLoadingPreview(true);
+    try {
+      const { publishService } = await import('@/services/publish.service');
+      const preview = await publishService.getPdfReleasePreview(report.id);
+      setPdfPreview(preview);
+    } catch (e: any) {
+      showToast(e?.message ?? 'Failed to generate PDF preview.', 'error');
+    } finally {
+      setIsLoadingPreview(false);
+    }
+  };
+
+  // Called by the modal's Publish button — uses the EXISTING pipeline unchanged
+  const handleConfirmPublish = async () => {
+    setIsConfirmingPublish(true);
+    try {
+      await actions.sendToPublish.mutateAsync();
+      setPdfPreview(null);
+      showToast('Report sent to publish queue', 'success');
+    } finally {
+      setIsConfirmingPublish(false);
+    }
+  };
+
+  // Called by the modal's Cancel button — PDF remains stored, nothing deleted
+  const handleCancelPreview = () => {
+    setPdfPreview(null);
   };
 
   const handleConfirmReject = async () => {
@@ -86,6 +118,17 @@ export const HumanReviewCard: React.FC<Props> = ({ report }) => {
 
   return (
     <>
+      {/* PDF Release Preview Modal */}
+      {pdfPreview && (
+        <PdfReleasePreviewModal
+          report={report}
+          preview={pdfPreview}
+          onPublish={handleConfirmPublish}
+          onCancel={handleCancelPreview}
+          isPublishing={isConfirmingPublish}
+        />
+      )}
+
       {/* Rejection Confirmation Modal */}
       {showRejectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
@@ -177,11 +220,13 @@ export const HumanReviewCard: React.FC<Props> = ({ report }) => {
 
             <button
               onClick={handlePublish}
-              disabled={actions.sendToPublish.isPending || actions.markDone.isPending}
+              disabled={actions.sendToPublish.isPending || actions.markDone.isPending || isLoadingPreview}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded hover:bg-gray-50 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
             >
-              {actions.sendToPublish.isPending ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Publishing…</>
+              {isLoadingPreview ? (
+                <><Loader2 className="w-4 h-4 animate-spin" />Preparing PDF Preview…</>
+              ) : actions.sendToPublish.isPending ? (
+                <><Loader2 className="w-4 h-4 animate-spin" />Publishing…</>
               ) : (
                 <><Send className="w-4 h-4" /> Publish Report Instantly</>
               )}

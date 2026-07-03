@@ -11,7 +11,7 @@
 // the endpoint falls back to a status-only update via the R2 Cloudflare function
 // so the frontend publish flow ALWAYS works regardless of GateX configuration.
 
-import type { PublishRecord } from '@/types';
+import type { PdfReleasePreview, PublishRecord } from '@/types';
 import { api } from '@/api/client';
 
 /**
@@ -176,4 +176,35 @@ export const publishService = {
     }
     return [];
   },
+
+  /**
+   * Generates (or reuses) a versioned PDF for the report and returns a
+   * presigned preview URL + metadata.
+   *
+   * This does NOT publish. It is step 1 of the PDF Release Preview flow.
+   * The existing publish pipeline is called separately only if the user
+   * clicks Publish in the preview modal.
+   */
+  async getPdfReleasePreview(reportId: string): Promise<PdfReleasePreview> {
+    const res = await api.post(`/pdf-release/${reportId}/preview`);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      const msg = body?.detail ?? `PDF release preview failed (HTTP ${res.status})`;
+      throw new Error(msg);
+    }
+    const body = await res.json();
+    const d = body?.data ?? {};
+    return {
+      pdfReleaseId:    d.pdf_release_id  ?? '',
+      versionNumber:   d.version_number  ?? 1,
+      isNew:           d.is_new          ?? true,
+      previewUrl:      d.preview_url     ?? '',
+      fileSizeBytes:   d.file_size_bytes ?? 0,
+      generatedAt:     d.generated_at    ?? new Date().toISOString(),
+      htmlChecksum:    d.html_checksum   ?? '',
+      documentVersion: d.document_version ?? 'v1',
+      status:          d.status          ?? 'generated',
+    };
+  },
 };
+
