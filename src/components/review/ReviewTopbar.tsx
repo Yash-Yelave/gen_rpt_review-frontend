@@ -7,6 +7,8 @@ import { useReviewActions } from '@/hooks/useReviewActions';
 import { useReviewStore } from '@/store/reviewStore';
 import { useUIStore } from '@/store/uiStore';
 import { useEditStore } from '@/store/editStore';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from '@/utils/constants';
 import { api } from '@/api/client';
 import type { Report } from '@/types';
 
@@ -21,6 +23,7 @@ export const ReviewTopbar: React.FC<Props> = ({ report }) => {
   const { decision, commentText, commentSection } = useReviewStore();
   const { showToast } = useUIStore();
   const { saveReview } = useReviewActions(report.id);
+  const qc = useQueryClient();
 
   // Edit store
   const isDirty = useEditStore((s) => s.isDirty);
@@ -66,6 +69,8 @@ export const ReviewTopbar: React.FC<Props> = ({ report }) => {
         throw new Error(body?.detail ?? body?.error ?? `Save failed (HTTP ${res.status})`);
       }
       clearAllEdits();
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.report(reportId) });
+      qc.invalidateQueries({ queryKey: QUERY_KEYS.reports });
       showToast('Text edits saved successfully', 'success');
     } catch (err: any) {
       showToast(err?.message ?? 'Failed to save text edits. Please try again.', 'error');
