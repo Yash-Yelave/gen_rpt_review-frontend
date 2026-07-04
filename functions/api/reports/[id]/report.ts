@@ -4,7 +4,7 @@
 // Currently unused by the React UI (which reads reportContent from manifest.json),
 // but provided for future integrations and direct document access.
 
-import { Env, S3Bucket } from '../../../_shared/r2';
+import { Env, S3Bucket, getRealReportId, getManifest } from '../../../_shared/r2';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   const id = context.params['id'] as string;
@@ -14,7 +14,10 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
   try {
     const bucket = new S3Bucket(context.env);
-    const obj = await bucket.get(`reports/${id}/current/report.md`);
+    const realId = await getRealReportId(bucket, id);
+    const manifest = await getManifest(bucket, realId) as any;
+    const reportMdKey = manifest?.files?.report_md || `reports/${realId}/current/report.md`;
+    const obj = await bucket.get(reportMdKey);
 
     if (!obj) {
       return new Response('', {

@@ -4,7 +4,7 @@
 // with comments.json (the live comment thread) into a single response
 // matching the Report TypeScript interface consumed by useReport(id).
 
-import { getManifest, getComments, jsonOk, jsonError, Env, S3Bucket } from '../../_shared/r2';
+import { getManifest, getComments, getRealReportId, jsonOk, jsonError, Env, S3Bucket } from '../../_shared/r2';
 
 function parseMarkdownToSections(md: string) {
   const lines = md.split('\n');
@@ -35,7 +35,8 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
   try {
     const bucket = new S3Bucket(context.env);
-    const manifest = await getManifest(bucket, id) as any;
+    const realId = await getRealReportId(bucket, id);
+    const manifest = await getManifest(bucket, realId) as any;
 
     if (!manifest || !manifest.files) {
       return jsonOk(null, 404);
@@ -45,7 +46,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     const [reportMdObj, reviewJsonObj, comments] = await Promise.all([
       manifest.files.report_md ? bucket.get(manifest.files.report_md) : null,
       manifest.files.review_json ? bucket.get(manifest.files.review_json) : null,
-      getComments(bucket, id),
+      getComments(bucket, realId),
     ]);
 
     const reportMdStr = reportMdObj ? await reportMdObj.text() : '';

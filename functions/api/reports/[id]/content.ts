@@ -17,7 +17,7 @@
 // always update the exact same file that the GET endpoint reads — guaranteeing
 // consistency across page refreshes.
 
-import { getManifest, jsonOk, jsonError, Env, S3Bucket } from '../../../_shared/r2';
+import { getManifest, getRealReportId, jsonOk, jsonError, Env, S3Bucket } from '../../../_shared/r2';
 
 // ── Markdown parser (mirrors [id].ts parseMarkdownToSections) ────────────────
 interface Section {
@@ -102,9 +102,10 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
   try {
     const bucket = new S3Bucket(context.env);
+    const realId = await getRealReportId(bucket, id);
 
     // ── Step 1: get manifest to find the report.md key ───────────────────
-    const manifest = await getManifest(bucket, id) as any;
+    const manifest = await getManifest(bucket, realId) as any;
     if (!manifest) return jsonError(`Report ${id} not found`, 404);
 
     const reportMdKey: string | undefined = manifest?.files?.report_md;

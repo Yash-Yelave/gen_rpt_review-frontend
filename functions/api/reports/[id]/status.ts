@@ -17,6 +17,7 @@ import {
   putManifest,
   getComments,
   updateCatalogEntry,
+  getRealReportId,
   jsonOk,
   jsonError,
   Env,
@@ -49,7 +50,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   try {
     const bucket = new S3Bucket(context.env);
-    const manifest = await getManifest(bucket, id);
+    const realId = await getRealReportId(bucket, id);
+    const manifest = await getManifest(bucket, realId);
 
     if (!manifest) {
       return jsonError(`Report ${id} not found`, 404);
@@ -66,10 +68,10 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const updatedManifest = { ...manifest, ...patch };
 
     // Persist manifest
-    await putManifest(bucket, id, updatedManifest);
+    await putManifest(bucket, realId, updatedManifest);
 
     // Sync the lightweight catalog entry
-    await updateCatalogEntry(bucket, id, {
+    await updateCatalogEntry(bucket, realId, {
       ...(status !== undefined && { status }),
       ...(humanStatus !== undefined && { humanStatus }),
       ...(publishReady !== undefined && { publishReady }),
@@ -77,7 +79,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     });
 
     // Return the full merged Report (manifest + live comments)
-    const comments = await getComments(bucket, id);
+    const comments = await getComments(bucket, realId);
     const report = { ...updatedManifest, comments, commentCount: comments.length };
 
     return jsonOk(report);

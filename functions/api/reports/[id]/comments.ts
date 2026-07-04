@@ -12,6 +12,7 @@ import {
   getComments,
   putComments,
   updateCatalogEntry,
+  getRealReportId,
   jsonOk,
   jsonError,
   Env,
@@ -28,7 +29,8 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
   try {
     const bucket = new S3Bucket(context.env);
-    const comments = await getComments(bucket, id);
+    const realId = await getRealReportId(bucket, id);
+    const comments = await getComments(bucket, realId);
     return jsonOk(comments);
   } catch (err) {
     console.error(`[GET /api/reports/${id}/comments] Error:`, err);
@@ -53,14 +55,15 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   try {
     const bucket = new S3Bucket(context.env);
-    let comments = (await getComments(bucket, id)) as Record<string, unknown>[];
+    const realId = await getRealReportId(bucket, id);
+    let comments = (await getComments(bucket, realId)) as Record<string, unknown>[];
 
     if (body['_action'] === 'resolve') {
       // Mark an existing comment as resolved
       const commentId = body['commentId'] as string;
       if (!commentId) return jsonError('Missing commentId', 400);
       comments = comments.map((c) =>
-        c['id'] === commentId ? { ...c, status: 'resolved' } : c
+         c['id'] === commentId ? { ...c, status: 'resolved' } : c
       );
     } else {
       // Add a new comment (body IS the comment object)
@@ -70,18 +73,18 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     }
 
     // Persist updated comments
-    await putComments(bucket, id, comments);
+    await putComments(bucket, realId, comments);
 
     // Sync commentCount in manifest and catalog
-    const manifest = await getManifest(bucket, id);
+    const manifest = await getManifest(bucket, realId);
     if (manifest) {
       const updatedManifest = {
         ...manifest,
         commentCount: comments.length,
         lastUpdated: new Date().toISOString(),
       };
-      await putManifest(bucket, id, updatedManifest);
-      await updateCatalogEntry(bucket, id, {
+      await putManifest(bucket, realId, updatedManifest);
+      await updateCatalogEntry(bucket, realId, {
         commentCount: comments.length,
         lastUpdated: updatedManifest['lastUpdated'] as string,
       });

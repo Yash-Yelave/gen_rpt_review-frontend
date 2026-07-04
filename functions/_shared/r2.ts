@@ -80,6 +80,32 @@ export function jsonError(message: string, status = 500): Response {
   });
 }
 
+export async function getRealReportId(bucket: S3Bucket, id: string): Promise<string> {
+  try {
+    // If the folder already exists directly (i.e. contains manifest.json), return as-is
+    const directObj = await bucket.get(`reports/${id}/manifest.json`);
+    if (directObj) return id;
+  } catch {}
+
+  try {
+    const catalog = await getCatalog(bucket);
+    const entry = catalog.find(
+      (e) =>
+        e.report_id === id ||
+        e.report_id.endsWith(id) ||
+        (e.slug && e.slug.endsWith(id)) ||
+        (e.id && e.id.endsWith(id))
+    );
+    if (entry && entry.report_id) {
+      return entry.report_id;
+    }
+  } catch (err) {
+    console.error(`[getRealReportId] Failed to resolve real report ID for ${id}:`, err);
+  }
+
+  return id;
+}
+
 export async function getCatalog(bucket: S3Bucket): Promise<any[]> {
   try {
     const obj = await bucket.get('catalog/catalog.json');
