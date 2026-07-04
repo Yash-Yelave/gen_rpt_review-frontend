@@ -7,7 +7,9 @@ import { useReviewActions } from '@/hooks/useReviewActions';
 import { useReviewStore } from '@/store/reviewStore';
 import { useUIStore } from '@/store/uiStore';
 import { useEditStore } from '@/store/editStore';
+import { api } from '@/api/client';
 import type { Report } from '@/types';
+
 
 interface Props {
   report: Report;
@@ -58,19 +60,10 @@ export const ReviewTopbar: React.FC<Props> = ({ report }) => {
     if (!reportId || !isDirty) return;
     setIsSavingEdits(true);
     try {
-      // Call the Cloudflare Pages function — NOT the FastAPI backend.
-      // The Pages function writes edits directly to report.md in R2, which is
-      // the source of truth read by the GET /api/reports/:id endpoint on every
-      // page refresh. Using the backend /api/v1 path would only update the
-      // in-memory MOCK_REPORTS and would be lost on page reload.
-      const res = await fetch(`/api/reports/${reportId}/content`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ edits }),
-      });
+      const res = await api.put(`/reports/${reportId}/content`, { edits });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error((body as any)?.error ?? `Save failed (HTTP ${res.status})`);
+        throw new Error(body?.detail ?? body?.error ?? `Save failed (HTTP ${res.status})`);
       }
       clearAllEdits();
       showToast('Text edits saved successfully', 'success');
