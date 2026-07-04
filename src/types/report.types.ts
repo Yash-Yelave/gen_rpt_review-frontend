@@ -70,11 +70,17 @@ export interface ReportSection {
   isDisclaimer?: boolean;
 }
 
+export interface ReportImage {
+  key: string;
+  url: string;
+}
+
 export interface ReportContent {
   brand: string;
   label: string;
   date: string;
   sections: ReportSection[];
+  images?: ReportImage[];
 }
 
 export interface Report {

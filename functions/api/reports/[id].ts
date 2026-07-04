@@ -99,6 +99,28 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       gccGaps: extractStrings(reviewJsonData?.gccGaps || recs.gcc_gaps)
     } : null;
 
+    // Scan for images under current/assets/
+    const images: { key: string; url: string }[] = [];
+    try {
+      const assetsPrefix = `reports/${realId}/current/assets/`;
+      const keys = await bucket.list(assetsPrefix);
+      const imageKeys = keys.filter((key) => {
+        const fname = key.split('/').pop() || '';
+        return fname.startsWith('image-') && fname.endsWith('.png');
+      });
+      
+      const signedUrls = await Promise.all(
+        imageKeys.map((key) => bucket.getSignedUrl(key))
+      );
+      
+      for (let i = 0; i < imageKeys.length; i++) {
+        const fname = imageKeys[i].split('/').pop() || '';
+        images.push({ key: fname, url: signedUrls[i] });
+      }
+    } catch (err) {
+      console.warn(`[GET /api/reports/${id}] Failed to scan or sign images:`, err);
+    }
+
     // Assemble final report
     const report = {
       id: manifest.report_id || id,
@@ -117,6 +139,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         label: 'Intelligence Report',
         date: new Date().toLocaleDateString(),
         sections: parseMarkdownToSections(reportMdStr),
+        images,
       },
       comments,
     };

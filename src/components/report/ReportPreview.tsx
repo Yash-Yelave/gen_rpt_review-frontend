@@ -500,6 +500,39 @@ export const ReportPreview: React.FC<Props> = ({ report, reviewMdText = '' }) =>
                   isDisclaimer={section.isDisclaimer}
                 />
               ))}
+
+              {/* Report Images Exhibit Gallery */}
+              {content.images && content.images.length > 0 && (
+                <div className="mt-12 border-t border-gray-200 pt-8">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-6 flex items-center gap-2">
+                    <span>Report Exhibits & Visuals</span>
+                    <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full font-mono">
+                      {content.images.length}
+                    </span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {content.images.map((img, i) => (
+                      <div
+                        key={img.key}
+                        className="group border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300"
+                      >
+                        <div className="aspect-[4/3] bg-gray-50 flex items-center justify-center overflow-hidden border-b border-gray-100">
+                          <img
+                            src={img.url}
+                            alt={`Exhibit ${i + 1} - ${img.key}`}
+                            className="max-w-full max-h-full object-contain group-hover:scale-[1.02] transition-transform duration-300"
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="px-4 py-2.5 bg-gray-50 flex items-center justify-between text-xs text-gray-500 font-medium">
+                          <span className="font-semibold text-gray-700">Exhibit {i + 1}</span>
+                          <span className="text-[11px] font-mono text-gray-400">{img.key}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ) : (

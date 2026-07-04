@@ -47,6 +47,24 @@ export class S3Bucket {
     });
     if (!res.ok) throw new Error(`S3 put error: ${res.status}`);
   }
+
+  async list(prefix: string): Promise<string[]> {
+    const res = await this.aws.fetch(`${this.baseUrl}/?list-type=2&prefix=${encodeURIComponent(prefix)}`);
+    if (!res.ok) throw new Error(`S3 list error: ${res.status}`);
+    const xmlText = await res.text();
+    const keys: string[] = [];
+    const keyMatches = xmlText.matchAll(/<Key>([^<]+)<\/Key>/g);
+    for (const m of keyMatches) {
+      keys.push(m[1]);
+    }
+    return keys;
+  }
+
+  async getSignedUrl(key: string): Promise<string> {
+    const request = new Request(`${this.baseUrl}/${key}`);
+    const signedRequest = await this.aws.sign(request, { aws: { signQuery: true } });
+    return signedRequest.url;
+  }
 }
 
 export interface CatalogEntry {
