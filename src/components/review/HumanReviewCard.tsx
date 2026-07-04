@@ -6,6 +6,7 @@ import { useReviewStore } from '@/store/reviewStore';
 import { useReviewActions } from '@/hooks/useReviewActions';
 import { useAuthStore } from '@/store/authStore';
 import { useUIStore } from '@/store/uiStore';
+import { useEditStore } from '@/store/editStore';
 import { COMMENT_PRIORITIES } from '@/utils/constants';
 import { PdfReleasePreviewModal } from '@/components/review/PdfReleasePreviewModal';
 import type { PdfReleasePreview } from '@/types';
@@ -42,6 +43,9 @@ export const HumanReviewCard: React.FC<Props> = ({ report }) => {
   const { reviewerName } = useAuthStore();
   const { showToast } = useUIStore();
   const actions = useReviewActions(report.id);
+
+  // Guard: block publish if reviewer has unsaved inline text edits
+  const isDirty = useEditStore((s) => s.isDirty);
 
   const handleDecisionChange = (d: string) => {
     if (d === 'Rejected') {
@@ -87,6 +91,14 @@ export const HumanReviewCard: React.FC<Props> = ({ report }) => {
 
   // ── Publish: intercept to show PDF preview first ───────────────────────
   const handlePublish = async () => {
+    // STRICT GUARD: PDF is generated from server-side content (R2), NOT the React DOM.
+    // If the reviewer has unsaved inline edits, the PDF would be generated from stale
+    // content — silently omitting their changes. Block publish until edits are saved.
+    if (isDirty) {
+      showToast('You have unsaved text edits. Please click "Save Edits" before publishing.', 'error');
+      return;
+    }
+
     setIsLoadingPreview(true);
     try {
       const { publishService } = await import('@/services/publish.service');

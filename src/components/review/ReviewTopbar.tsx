@@ -1,11 +1,13 @@
 // src/components/review/ReviewTopbar.tsx
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Save, PencilLine, Loader2 } from 'lucide-react';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { useReviewActions } from '@/hooks/useReviewActions';
 import { useReviewStore } from '@/store/reviewStore';
 import { useUIStore } from '@/store/uiStore';
+import { useEditStore } from '@/store/editStore';
+import { api } from '@/api/client';
 import type { Report } from '@/types';
 
 interface Props {
@@ -14,9 +16,28 @@ interface Props {
 
 export const ReviewTopbar: React.FC<Props> = ({ report }) => {
   const navigate = useNavigate();
+  const { reportId } = useParams<{ reportId: string }>();
   const { decision, commentText, commentSection } = useReviewStore();
   const { showToast } = useUIStore();
   const { saveReview } = useReviewActions(report.id);
+
+  // Edit store
+  const isDirty = useEditStore((s) => s.isDirty);
+  const edits = useEditStore((s) => s.edits);
+  const clearAllEdits = useEditStore((s) => s.clearAllEdits);
+  const [isSavingEdits, setIsSavingEdits] = React.useState(false);
+
+  // Warn user before navigating away with unsaved edits
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved text edits. Are you sure you want to leave?';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
 
   const handleSave = async () => {
     if (decision === 'Needs Revision') {
@@ -32,6 +53,25 @@ export const ReviewTopbar: React.FC<Props> = ({ report }) => {
       await saveReview.mutateAsync({ decision });
     }
     showToast('Review saved successfully', 'success');
+  };
+
+  const handleSaveEdits = async () => {
+    if (!reportId || !isDirty) return;
+    setIsSavingEdits(true);
+    try {
+      const res = await api.put(`/reports/${reportId}/content`, { edits });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.detail ?? `Save failed (HTTP ${res.status})`);
+      }
+      clearAllEdits();
+      showToast('Text edits saved successfully', 'success');
+    } catch (err: any) {
+      showToast(err?.message ?? 'Failed to save text edits. Please try again.', 'error');
+      // Do NOT clear edits on failure — user keeps their work
+    } finally {
+      setIsSavingEdits(false);
+    }
   };
 
   return (
@@ -56,11 +96,41 @@ export const ReviewTopbar: React.FC<Props> = ({ report }) => {
                 AI Score: {report.aiScore.toFixed(1)}
               </span>
             )}
+            {/* Dirty indicator badge in topbar */}
+            {isDirty && (
+              <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                <PencilLine className="w-2.5 h-2.5" />
+                Unsaved edits
+              </span>
+            )}
           </div>
         </div>
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Save Edits — only visible when there are pending inline paragraph edits */}
+        {isDirty && (
+          <button
+            id="save-edits-btn"
+            onClick={handleSaveEdits}
+            disabled={isSavingEdits}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white border border-amber-600 rounded text-sm font-semibold transition-colors disabled:opacity-50 shadow-sm"
+          >
+            {isSavingEdits ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              <>
+                <PencilLine className="w-4 h-4" />
+                Save Edits
+              </>
+            )}
+          </button>
+        )}
+
+        {/* Save Review — existing button, unchanged behaviour */}
         <button
           onClick={handleSave}
           disabled={saveReview.isPending}
