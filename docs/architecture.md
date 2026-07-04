@@ -89,34 +89,66 @@ Handles mutation operations that change reports or add comments, ensuring that t
 
 ---
 
-## 🌐 Mock Service Database Layer (`src/services/`)
+## 🌐 Enterprise Backend & Storage Layer
 
-The application runs purely in the client by simulating a database using an in-memory variable populated from **[services/mockData.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/services/mockData.ts)**.
+The application operates in an integrated enterprise mode, routing requests to the **FastAPI Backend** (configured via `VITE_API_BASE_URL` to `/api/v1` or Render API). It uses **Cloudflare R2** as the persistent storage engine.
 
 ```mermaid
-graph LR
-    subgraph UI Pages
-        Dashboard --> useReports
-        ReportReview --> useReviewActions
+graph TD
+    subgraph Client Browser
+        UI[React Pages / Canvas]
+        RQ[TanStack Query Cache]
+        API[API Client src/api/client.ts]
     end
-    subgraph Custom Hooks
-        useReports --> ReactQuery
-        useReviewActions --> ReactQuery
+    subgraph Enterprise Backend Layer
+        FA[FastAPI Server on Render]
+        CACHE[MOCK_REPORTS memory cache]
+        PDF[Playwright PDF Release Service]
     end
-    subgraph Service API Layer
-        ReactQuery --> reportsService
-        ReactQuery --> reviewsService
-        ReactQuery --> commentsService
-        ReactQuery --> publishService
+    subgraph Storage Buckets
+        R2_MD[(R2: report.md)]
+        R2_JSON[(R2: web_report_payload.json)]
     end
-    subgraph In-Memory Database
-        reportsService --> mockData.ts
-        commentsService --> mockData.ts
-    end
+
+    UI -->|Triggers edits| API
+    API -->|PUT /content| FA
+    FA -->|1. Patch memory cache| CACHE
+    FA -->|2. Write updated payload| R2_JSON
+    FA -->|3. Write reconstructed markdown| R2_MD
+    FA -->|4. Trigger generation| PDF
+    PDF -->|Fetch updated Markdown/Sections| R2_MD
+    RQ -->|Invalidated on PUT success| UI
 ```
 
-### Mock Services:
-*   **[reports.service.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/services/reports.service.ts)**: Deep-copies `MOCK_REPORTS` on load to ensure session edits are preserved. Simulates async latency using a small delay timer.
-*   **[comments.service.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/services/comments.service.ts)**: Appends comments and modifies comment status.
-*   **[reviews.service.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/services/reviews.service.ts)**: Orchestrates workflows (e.g. `requestRegeneration` will submit comments, set the report status to `Needs Revision`, and update the timestamp).
-*   **[publish.service.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/src/services/publish.service.ts)**: Appends reports to a local publish log and transitions their status.
+### 💾 Persistence & Live Synchronization Flow
+When a reviewer saves inline text edits inside the human review workspace, the following unified synchronization occurs:
+1. **Frontend Dispatches PUT request**: The frontend calls `PUT /api/v1/reports/{id}/content` containing the paragraph key-value edits mapping.
+2. **Backend Cache Update**: The FastAPI backend patches the active report dictionary in its `MOCK_REPORTS` memory cache.
+3. **Double R2 Persist**:
+   * The backend patches and uploads `web_report_payload.json` back to R2.
+   * The backend dynamically reconstructs the clean Markdown format from the section bodies and overwrites `report.md` in R2.
+4. **PDF Regeneration**: The backend triggers the PDF release engine. The release service resolves the report HTML and reconstructs the markdown text from the sections, invoking Python's `markdown` parser to inject the revised text directly into the `<article class="article-main">` layout of the PDF compilation context.
+5. **TanStack Query Invalidation**: Upon receiving a successful PUT status, the frontend immediately invalidates the React Query cache for the report, forcing an instantaneous network refetch so the refreshed UI stays synchronized without any stale delay.
+
+---
+
+## 🔒 Strict System Constraints & Logics
+
+The following are **critical architectural components** that must not be altered, as they form the foundational logic of the application:
+
+### 1. Highlighting & Annotation Engine
+* **Logic**: AI review annotations mapping to the document are based on character coordinates and substring match sequences mapped by `reviewHighlighter.ts`.
+* **Constraint**: Any modifications to report parsing or DOM rendering must preserve paragraph tags and their stable coordinates-derived identifiers.
+
+### 2. Standard Slugification Rules
+* **Logic**: Frontend paragraph IDs and backend heading identifiers must use the exact same slugification pattern:
+  `heading.toLowerCase().replace(/[^\w]+/g, '-').replace(/^-+|-+$/g, '')`
+* **Constraint**: Do not change this regex. If the slugification pattern deviates, paragraph IDs will mismatch, causing edit updates to be silently skipped by the backend.
+
+### 3. Editorial State Machine
+* **Logic**: The status transition flows (`AI Reviewed` -> `Needs Revision` -> `Approved` -> `Published`) represent core operational flows hook-linked with external automation pipelines.
+* **Constraint**: Status values and transition paths must not be changed.
+
+### 4. 3-Panel Workspace Layout
+* **Logic**: The reviewer's screen is split into three side-by-side components: Section Navigation, Interactive Report Canvas, and AI Review / Version History panel.
+* **Constraint**: Maintain this premium three-column workspace layout structure to keep the UI clean and scannable.

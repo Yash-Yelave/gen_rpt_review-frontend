@@ -198,11 +198,20 @@ Global UI states, reviewer profiles, and editorial form drafts are decoupled fro
 
 ---
 
-## 🌐 5. Backend Cloudflare Pages Functions (API)
+## 🌐 5. Backend Services & Storage Architecture (FastAPI & Cloudflare R2)
 
-All database operations are mediated by backend API routes under `/functions/api/`. These handle storage tasks against a Cloudflare R2 bucket.
+The application supports a hybrid backend integration layer. In local mock or standalone environments, it communicates with the serverless **Cloudflare Pages Functions** at `/api/...`. In production enterprise configurations, the frontend API client (`src/api/client.ts`) communicates with the stateful **FastAPI Enterprise Backend** at `/api/v1/...`. Both layers persist data to **Cloudflare R2**.
 
-### 📁 Directory Layout
+### 📁 FastAPI Enterprise Backend Endpoints (Render)
+* **`GET /api/v1/reports`**: Retrieves list of all reports (uses database models & R2 list sync).
+* **`GET /api/v1/reports/{id}`**: Retrieves a report, loading from R2's `web_report_payload.json` on cache miss, caching it in `MOCK_REPORTS` memory.
+* **`PUT /api/v1/reports/{id}/content`**: Updates the inline edits of a report. Patches `MOCK_REPORTS`, serializes updated JSON back to `web_report_payload.json` in R2, reconstructs clean Markdown text to save in `report.md` in R2, and triggers PDF regeneration.
+* **`POST /api/v1/reports/{id}/status`**: Transitions report status and human reviewer decisions.
+* **`POST /api/v1/reports/{id}/comments`**: Appends or resolves section comments.
+* **`POST /api/v1/reports/edit`**: Dispatches inline AI edits (Rewrite, Expand, Regenerate).
+* **`GET /api/v1/generation/jobs`** & **`POST /api/v1/generation/jobs`**: Interacts with the async report generation queue.
+
+### 📁 Serverless Cloudflare Pages Functions Layout
 ```text
 functions/
 ├── _middleware.ts
@@ -214,42 +223,22 @@ functions/
         │   ├── comments.ts
         │   ├── report.ts
         │   ├── review.ts
-        │   └── status.ts
+        │   ├── status.ts
+        │   └── content.ts
         ├── [id].ts
         └── index.ts
 ```
+* **`functions/_middleware.ts`**: Handles preflight CORS requests.
+* **`functions/_shared/r2.ts`**: S3 Client wrapping `aws4fetch` for bucket credentials. Resolves path names via `getRealReportId()` (maps slugs to dates).
+* **`PUT /api/reports/:id/content`**: Writes inline text edits directly to R2's `report.md`.
 
-### 1. Global CORS Middleware (`functions/_middleware.ts`)
-Intercepts all incoming `/api/*` endpoints to handle OPTIONS preflight requests and inject global CORS access headers, allowing cross-origin requests.
+### 📄 Playwright PDF Generation Workflow
+PDF release compilation is handled on the FastAPI server by the `PdfReleaseService`:
+1. It downloads the template page or index layout from R2 (`current/index.html`).
+2. It parses and injects the updated markdown content from `report.md` dynamically into the `<article class="article-main">` layout using python-markdown.
+3. It launches Playwright headless browser to render the page and outputs a print-quality PDF.
 
-### 2. S3-Compatible Client API (`functions/_shared/r2.ts`)
-Cloudflare Pages native bindings cannot be used directly because the R2 bucket belongs to a separate Cloudflare account. Instead, the backend constructs an S3 client using `aws4fetch`.
-*   **`S3Bucket`**: Implements basic S3 client operations (`get`, `put`).
-*   **`getCatalog(bucket)`**: Fetches `catalog/catalog.json`, which acts as the index list of all reports.
-*   **`updateCatalogEntry(bucket, id, updates)`**: Finds a catalog entry by ID and merges updates back into the index.
-*   **`getManifest(bucket, id)`** & **`putManifest(bucket, id, manifest)`**: Manages the detailed manifest file containing metadata for a specific report.
-*   **`getComments(bucket, id)`** & **`putComments(bucket, id, comments)`**: Fetches or overwrites the comment thread file (`reports/${id}/comments.json`).
-
-### 3. API Route Implementations
-*   **`GET /api/reports`** ([index.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/functions/api/reports/index.ts))
-    *   Fetches the global catalog file from R2.
-    *   Maps raw catalog items to the frontend's summary `Report` format to render tables and status counts.
-*   **`GET /api/reports/:id`** ([\[id\].ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/functions/api/reports/[id].ts))
-    *   Fetches the report's manifest, markdown body, AI evaluation JSON, and comment threads in parallel.
-    *   Parses the raw report markdown into structured HTML-safe sections.
-    *   Normalizes AI scores, component scores, strategic/data/gcc gaps, writing flaws, priority improvements, and executive readiness fields before returning the merged object.
-*   **`POST /api/reports/:id/status`** ([status.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/functions/api/reports/[id]/status.ts))
-    *   Updates the manifest fields (`status`, `humanStatus`, `publishReady`) for a specific report.
-    *   Syncs these status fields in the global `catalog.json` file.
-    *   Returns the updated report object, including its comments.
-*   **`GET /api/reports/:id/comments`** & **`POST /api/reports/:id/comments`** ([comments.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/functions/api/reports/[id]/comments.ts))
-    *   `GET`: Returns the active comments thread.
-    *   `POST (Add Comment)`: Appends a new comment to the thread, updates `commentCount` in the manifest and catalog index, and returns the updated comment array.
-    *   `POST (Resolve Comment)`: Targets a specific comment by ID, updates its status to `"resolved"`, updates the files, and returns the comments list.
-*   **`GET /api/reports/:id/report`** ([report.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/functions/api/reports/[id]/report.ts))
-    *   Streams the raw markdown file (`report.md`) from R2.
-*   **`GET /api/reports/:id/review`** ([review.ts](file:///d:/BlueOcean/gen_rpt_review-frontend-main/functions/api/reports/[id]/review.ts))
-    *   Streams the raw review markdown/text output (`review.json`) from R2. Falls back to an empty string if not found.
+---
 
 ---
 
