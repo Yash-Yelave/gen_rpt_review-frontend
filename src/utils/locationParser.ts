@@ -25,10 +25,8 @@ export interface ParsedLocation {
 export function slugify(text: string): string {
   return text
     .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')     // remove special chars
-    .replace(/[\s_]+/g, '-')      // spaces/underscores → dash
-    .replace(/^-+|-+$/g, '');     // trim leading/trailing dashes
+    .replace(/[^\w]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 /**
