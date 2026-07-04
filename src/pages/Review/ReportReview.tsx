@@ -107,7 +107,7 @@ export const ReportReview: React.FC = () => {
     queryKey: ['review-md', reportId],
     queryFn: async () => {
       if (!reportId) return '';
-      const res = await fetch(`/api/v1/reports/${reportId}/review`);
+      const res = await fetch(`/api/reports/${reportId}/review`);
       if (!res.ok) return '';
       return res.text();
     },
