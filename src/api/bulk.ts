@@ -85,3 +85,14 @@ export async function clearBulkQueue(): Promise<{ cleared_count: number }> {
   const body = await res.json();
   return body.data as { cleared_count: number };
 }
+
+/** Cancel all pending and running bulk jobs in database and stop GitHub Action runs. */
+export async function cancelAllBulkJobs(): Promise<{ cleared_jobs: number; cancelled_github_runs: number }> {
+  const res = await api.post('/generation/bulk/cancel-all');
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.detail || `API error ${res.status}`);
+  }
+  const body = await res.json();
+  return body.data as { cleared_jobs: number; cancelled_github_runs: number };
+}

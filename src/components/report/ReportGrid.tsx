@@ -9,12 +9,21 @@ interface Props {
   statuses: string[];
   emptyTitle: string;
   emptyText?: string;
+  sortBy?: 'latest' | 'oldest';
 }
 
-export const ReportGrid: React.FC<Props> = ({ statuses, emptyTitle, emptyText }) => {
+export const ReportGrid: React.FC<Props> = ({ statuses, emptyTitle, emptyText, sortBy = 'latest' }) => {
   const reports = useFilteredReports(statuses);
 
-  if (reports.length === 0) {
+  const sortedReports = React.useMemo(() => {
+    return [...reports].sort((a, b) => {
+      const dateA = new Date(a.lastUpdated).getTime();
+      const dateB = new Date(b.lastUpdated).getTime();
+      return sortBy === 'latest' ? dateB - dateA : dateA - dateB;
+    });
+  }, [reports, sortBy]);
+
+  if (sortedReports.length === 0) {
     return (
       <EmptyState
         icon={<FileSearch className="w-full h-full" />}
@@ -26,7 +35,7 @@ export const ReportGrid: React.FC<Props> = ({ statuses, emptyTitle, emptyText })
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      {reports.map((r) => (
+      {sortedReports.map((r) => (
         <ReportCard key={r.id} report={r} />
       ))}
     </div>

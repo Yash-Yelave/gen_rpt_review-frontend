@@ -11,13 +11,12 @@ import {
   Play,
   PlayCircle,
   RefreshCw,
-  Trash2,
   TriangleAlert,
   UploadCloud,
   XCircle,
 } from 'lucide-react';
 import type { BulkJob, BulkJobItem } from '@/api/bulk';
-import { getBulkQueue, submitBulkJobs, getBulkQueueState, setBulkQueueState, clearBulkQueue } from '@/api/bulk';
+import { getBulkQueue, submitBulkJobs, getBulkQueueState, setBulkQueueState, cancelAllBulkJobs } from '@/api/bulk';
 
 // ─── CSV parsing ─────────────────────────────────────────────────────────────
 
@@ -238,16 +237,18 @@ export const BulkGenerate: React.FC = () => {
     }
   };
 
-  const handleClearPending = async () => {
-    if (!window.confirm('Are you sure you want to cancel and clear all pending/queued jobs?')) {
+
+  const handleCancelAll = async () => {
+    if (!window.confirm('WARNING: This will cancel all active workflow runs on GitHub and fail all queued/pending database jobs. Are you sure you want to stop everything?')) {
       return;
     }
     try {
       setQueueLoading(true);
-      await clearBulkQueue();
+      const res = await cancelAllBulkJobs();
+      setSubmitResult(`Successfully cancelled all ${res.cleared_jobs} database jobs and stopped ${res.cancelled_github_runs} active GitHub Action workflows.`);
       await fetchQueue();
     } catch (err: any) {
-      setSubmitError(err.message || 'Failed to clear pending queue.');
+      setSubmitError(err.message || 'Failed to cancel workflows.');
     } finally {
       setQueueLoading(false);
     }
@@ -491,43 +492,16 @@ export const BulkGenerate: React.FC = () => {
               {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
               {isPaused ? 'Resume Upcoming Jobs' : 'Pause Upcoming Jobs'}
             </button>
-            {stats.pending > 0 && (
+            {(stats.pending > 0 || stats.running > 0) && (
               <button
-                onClick={handleClearPending}
+                onClick={handleCancelAll}
                 disabled={queueLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all border bg-red-50 hover:bg-red-100 text-red-700 border-red-200 disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all border bg-red-600 hover:bg-red-700 text-white border-red-700 disabled:opacity-50"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                Clear Pending Queue
+                <XCircle className="w-3.5 h-3.5" />
+                Cancel All Workflows
               </button>
             )}
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Threshold:</span>
-              <select
-                value={limit}
-                onChange={async (e) => {
-                  const val = parseInt(e.target.value, 10);
-                  setLimit(val);
-                  try {
-                    setQueueLoading(true);
-                    const state = await setBulkQueueState(isPaused, val);
-                    setLimit(state.limit);
-                  } catch (err: any) {
-                    setSubmitError(err.message || 'Failed to update threshold limit.');
-                  } finally {
-                    setQueueLoading(false);
-                  }
-                }}
-                disabled={queueLoading}
-                className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium text-gray-700"
-              >
-                {[5, 10, 15, 20].map((v) => (
-                  <option key={v} value={v}>
-                    {v} concurrent
-                  </option>
-                ))}
-              </select>
-            </div>
             <button
               onClick={fetchQueue}
               className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
