@@ -57,50 +57,7 @@ function parseCSV(text: string): ParsedRow[] {
   });
 }
 
-// ─── Status badge ─────────────────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; cls: string; icon: React.ReactNode }
-> = {
-  pending: {
-    label: 'Pending',
-    cls: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
-    icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />,
-  },
-  running: {
-    label: 'Running',
-    cls: 'bg-blue-50 text-blue-700 border border-blue-200',
-    icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />,
-  },
-  completed: {
-    label: 'Completed',
-    cls: 'bg-green-50 text-green-700 border border-green-200',
-    icon: <CheckCircle2 className="w-3.5 h-3.5" />,
-  },
-  failed: {
-    label: 'Failed',
-    cls: 'bg-red-50 text-red-700 border border-red-200',
-    icon: <XCircle className="w-3.5 h-3.5" />,
-  },
-  cancelled: {
-    label: 'Cancelled',
-    cls: 'bg-gray-100 text-gray-500 border border-gray-200',
-    icon: <XCircle className="w-3.5 h-3.5" />,
-  },
-};
-
-function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.cls}`}
-    >
-      {cfg.icon}
-      {cfg.label}
-    </span>
-  );
-}
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -252,6 +209,49 @@ export const BulkGenerate: React.FC = () => {
     } finally {
       setQueueLoading(false);
     }
+  };
+
+  const getQueueStatusBadge = (status: string) => {
+    if (status === 'pending') {
+      if (isPaused) {
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider text-[10px]">
+            Paused
+          </span>
+        );
+      }
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap bg-gray-50 text-gray-600 border border-gray-200 uppercase tracking-wider text-[10px]">
+          Pending
+        </span>
+      );
+    }
+    if (status === 'running') {
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap bg-blue-50 text-blue-700 border border-blue-200 animate-pulse uppercase tracking-wider text-[10px]">
+          Running
+        </span>
+      );
+    }
+    if (status === 'completed') {
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap bg-green-50 text-green-700 border border-green-200 uppercase tracking-wider text-[10px]">
+          Completed
+        </span>
+      );
+    }
+    if (status === 'failed') {
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap bg-red-50 text-red-700 border border-red-200 uppercase tracking-wider text-[10px]">
+          Failed
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap bg-gray-50 text-gray-500 border border-gray-200 uppercase tracking-wider text-[10px]">
+        {status}
+      </span>
+    );
   };
 
   // ── Queue stats ────────────────────────────────────────────────────────────
@@ -544,7 +544,7 @@ export const BulkGenerate: React.FC = () => {
                     </td>
                     <td className="px-5 py-3.5 text-gray-500 text-xs">{job.industry || '—'}</td>
                     <td className="px-5 py-3.5">
-                      <StatusBadge status={job.status} />
+                      {getQueueStatusBadge(job.status)}
                       {job.errors && job.status === 'failed' && (
                         <p className="text-xs text-red-400 mt-1 max-w-[200px] truncate" title={job.errors}>
                           {job.errors}
