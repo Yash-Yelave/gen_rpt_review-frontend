@@ -21,7 +21,7 @@ export interface BulkJob {
 
 export interface BulkSubmitResult {
   dispatched: number;
-  overflow_skipped: number;
+  queued: number;
   errors: Array<{ topic: string; error: string }>;
   jobs: Array<{
     job_id: string;
@@ -30,6 +30,10 @@ export interface BulkSubmitResult {
     industry: string | null;
     status: string;
   }>;
+}
+
+export interface BulkQueueState {
+  paused: boolean;
 }
 
 /** Submit a batch of report generation jobs parsed from the CSV. */
@@ -49,4 +53,23 @@ export async function getBulkQueue(): Promise<BulkJob[]> {
   if (!res.ok) return [];
   const body = await res.json();
   return (body.data || []) as BulkJob[];
+}
+
+/** Get the persistent bulk queue state (paused/running). */
+export async function getBulkQueueState(): Promise<BulkQueueState> {
+  const res = await api.get('/generation/bulk/queue-state');
+  if (!res.ok) return { paused: false };
+  const body = await res.json();
+  return body.data as BulkQueueState;
+}
+
+/** Pause or resume the bulk queue scheduler. */
+export async function setBulkQueueState(paused: boolean): Promise<BulkQueueState> {
+  const res = await api.post('/generation/bulk/queue-state', { paused });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.detail || `API error ${res.status}`);
+  }
+  const body = await res.json();
+  return body.data as BulkQueueState;
 }

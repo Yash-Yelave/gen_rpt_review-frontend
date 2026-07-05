@@ -7,6 +7,8 @@ import {
   FileSpreadsheet,
   Layers,
   Loader2,
+  Pause,
+  Play,
   PlayCircle,
   RefreshCw,
   TriangleAlert,
@@ -14,7 +16,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import type { BulkJob, BulkJobItem } from '@/api/bulk';
-import { getBulkQueue, submitBulkJobs } from '@/api/bulk';
+import { getBulkQueue, submitBulkJobs, getBulkQueueState, setBulkQueueState } from '@/api/bulk';
 
 // ─── CSV parsing ─────────────────────────────────────────────────────────────
 
@@ -115,14 +117,21 @@ export const BulkGenerate: React.FC = () => {
   const [queueLoading, setQueueLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(true);
   const [limit, setLimit] = useState(20);
+  const [isPaused, setIsPaused] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Queue polling ──────────────────────────────────────────────────────────
   const fetchQueue = useCallback(async () => {
     try {
-      const data = await getBulkQueue();
+      const [data, state] = await Promise.all([
+        getBulkQueue(),
+        getBulkQueueState()
+      ]);
       setQueue(data);
+      setIsPaused(state.paused);
+    } catch (err) {
+      console.error('Failed to fetch queue data:', err);
     } finally {
       setQueueLoading(false);
     }
@@ -192,26 +201,37 @@ export const BulkGenerate: React.FC = () => {
     setSubmitError(null);
     setSubmitResult(null);
 
-    const items: BulkJobItem[] = validRows
-      .slice(0, limit)
-      .map((r) => ({ topic: r.topic, industry: r.industry || undefined }));
+    const items: BulkJobItem[] = validRows.map((r) => ({
+      topic: r.topic,
+      industry: r.industry || undefined,
+    }));
 
     try {
       const result = await submitBulkJobs(items, limit);
-      const msg = `✅ Dispatched ${result.dispatched} job(s).${
-        result.overflow_skipped > 0
-          ? ` ${result.overflow_skipped} skipped (exceeds ${limit}-job limit).`
-          : ''
-      }${result.errors.length > 0 ? ` ${result.errors.length} error(s).` : ''}`;
+      const msg = `✅ Successfully submitted batch. Dispatched: ${result.dispatched} job(s), Queued: ${result.queued} job(s).${
+        result.errors.length > 0 ? ` ${result.errors.length} error(s).` : ''
+      }`;
       setSubmitResult(msg);
       setRows([]);
       setFileName('');
-      // Refresh queue immediately after dispatch
       await fetchQueue();
     } catch (err: any) {
       setSubmitError(err.message || 'Submission failed. Check backend connection.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const toggleQueuePause = async () => {
+    try {
+      setQueueLoading(true);
+      const state = await setBulkQueueState(!isPaused);
+      setIsPaused(state.paused);
+      await fetchQueue();
+    } catch (err: any) {
+      setSubmitError(err.message || 'Failed to update queue state.');
+    } finally {
+      setQueueLoading(false);
     }
   };
 
@@ -374,7 +394,7 @@ export const BulkGenerate: React.FC = () => {
               )}
               {submitting
                 ? 'Dispatching…'
-                : `Start Generation (${Math.min(validRows.length, limit)} job${Math.min(validRows.length, limit) !== 1 ? 's' : ''})`}
+                : `Start Generation (${validRows.length} job${validRows.length !== 1 ? 's' : ''})`}
             </button>
 
             {fileName && (
@@ -403,11 +423,12 @@ export const BulkGenerate: React.FC = () => {
       </div>
 
       {/* ─── Stats ─── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {[
           { label: 'Total Jobs', value: stats.total, cls: 'text-gray-700' },
-          { label: 'Running', value: stats.running, cls: 'text-blue-600' },
-          { label: 'Completed', value: stats.completed, cls: 'text-green-600' },
+          { label: 'Running', value: stats.running, cls: 'text-blue-600 font-bold' },
+          { label: 'Queued (Pending)', value: stats.pending, cls: 'text-amber-600 font-bold' },
+          { label: 'Completed', value: stats.completed, cls: 'text-green-600 font-bold' },
           { label: 'Failed', value: stats.failed, cls: 'text-red-600' },
         ].map(({ label, value, cls }) => (
           <div key={label} className="bg-white border border-gray-200 rounded-xl px-5 py-4 shadow-sm">
@@ -420,25 +441,46 @@ export const BulkGenerate: React.FC = () => {
       {/* ─── Queue table ─── */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Layers className="w-4 h-4 text-gray-400" />
             <span className="text-sm font-semibold text-gray-700">
               Step 2 — Generation Queue
             </span>
+            <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider
+              ${isPaused
+                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                : 'bg-green-50 text-green-700 border-green-200'}`}
+            >
+              {isPaused ? '⏸️ Queue Paused' : '🟢 Queue Active'}
+            </span>
             {(stats.pending > 0 || stats.running > 0) && (
-              <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
                 <Loader2 className="w-3 h-3 animate-spin" />
                 Live · polling every 5s
               </span>
             )}
           </div>
-          <button
-            onClick={fetchQueue}
-            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleQueuePause}
+              disabled={queueLoading}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all border
+                ${isPaused
+                  ? 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
+                  : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'}
+                ${queueLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
+              {isPaused ? 'Resume Upcoming Jobs' : 'Pause Upcoming Jobs'}
+            </button>
+            <button
+              onClick={fetchQueue}
+              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Refresh
+            </button>
+          </div>
         </div>
 
         {queueLoading ? (
