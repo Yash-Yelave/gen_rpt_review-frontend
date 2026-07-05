@@ -470,7 +470,7 @@ export const BulkGenerate: React.FC = () => {
                 ? 'bg-amber-50 text-amber-700 border-amber-200'
                 : 'bg-green-50 text-green-700 border-green-200'}`}
             >
-              {isPaused ? '⏸️ Queue Paused' : '🟢 Queue Active'}
+              {isPaused ? '⏸️ Pending Jobs Paused' : '🟢 Pending Jobs Active'}
             </span>
             {(stats.pending > 0 || stats.running > 0) && (
               <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
@@ -490,7 +490,7 @@ export const BulkGenerate: React.FC = () => {
                 ${queueLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
-              {isPaused ? 'Resume Upcoming Jobs' : 'Pause Upcoming Jobs'}
+              {isPaused ? 'Resume Pending Jobs' : 'Pause Pending Jobs'}
             </button>
             {(stats.pending > 0 || stats.running > 0) && (
               <button
