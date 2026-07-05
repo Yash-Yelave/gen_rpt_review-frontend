@@ -34,6 +34,7 @@ export interface BulkSubmitResult {
 
 export interface BulkQueueState {
   paused: boolean;
+  limit: number;
 }
 
 /** Submit a batch of report generation jobs parsed from the CSV. */
@@ -58,14 +59,14 @@ export async function getBulkQueue(): Promise<BulkJob[]> {
 /** Get the persistent bulk queue state (paused/running). */
 export async function getBulkQueueState(): Promise<BulkQueueState> {
   const res = await api.get('/generation/bulk/queue-state');
-  if (!res.ok) return { paused: false };
+  if (!res.ok) return { paused: false, limit: 20 };
   const body = await res.json();
   return body.data as BulkQueueState;
 }
 
-/** Pause or resume the bulk queue scheduler. */
-export async function setBulkQueueState(paused: boolean): Promise<BulkQueueState> {
-  const res = await api.post('/generation/bulk/queue-state', { paused });
+/** Pause or resume the bulk queue scheduler, or update the threshold limit. */
+export async function setBulkQueueState(paused?: boolean, limit?: number): Promise<BulkQueueState> {
+  const res = await api.post('/generation/bulk/queue-state', { paused, limit });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body?.detail || `API error ${res.status}`);

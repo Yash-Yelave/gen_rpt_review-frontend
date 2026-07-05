@@ -130,6 +130,7 @@ export const BulkGenerate: React.FC = () => {
       ]);
       setQueue(data);
       setIsPaused(state.paused);
+      setLimit(state.limit || 20);
     } catch (err) {
       console.error('Failed to fetch queue data:', err);
     } finally {
@@ -225,8 +226,9 @@ export const BulkGenerate: React.FC = () => {
   const toggleQueuePause = async () => {
     try {
       setQueueLoading(true);
-      const state = await setBulkQueueState(!isPaused);
+      const state = await setBulkQueueState(!isPaused, limit);
       setIsPaused(state.paused);
+      setLimit(state.limit);
       await fetchQueue();
     } catch (err: any) {
       setSubmitError(err.message || 'Failed to update queue state.');
@@ -473,6 +475,33 @@ export const BulkGenerate: React.FC = () => {
               {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
               {isPaused ? 'Resume Upcoming Jobs' : 'Pause Upcoming Jobs'}
             </button>
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Threshold:</span>
+              <select
+                value={limit}
+                onChange={async (e) => {
+                  const val = parseInt(e.target.value, 10);
+                  setLimit(val);
+                  try {
+                    setQueueLoading(true);
+                    const state = await setBulkQueueState(isPaused, val);
+                    setLimit(state.limit);
+                  } catch (err: any) {
+                    setSubmitError(err.message || 'Failed to update threshold limit.');
+                  } finally {
+                    setQueueLoading(false);
+                  }
+                }}
+                disabled={queueLoading}
+                className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium text-gray-700"
+              >
+                {[5, 10, 15, 20].map((v) => (
+                  <option key={v} value={v}>
+                    {v} concurrent
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               onClick={fetchQueue}
               className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
