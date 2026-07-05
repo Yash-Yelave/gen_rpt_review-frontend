@@ -56,3 +56,29 @@ Once a report is marked as `Approved`:
 * **Save Edits Icon vs. Save Review Button**: They are different! Use the **pencil icon** to save text edits. Use the **Save Review** text button to change the review status.
 * **Keep Edits Intact**: Do not submit an approval status if you have unsaved text changes in progress (represented by the green badge). Click the save icon first!
 * **Version Control**: Look at the **Version History panel** in the right-hand sidebar to see previous drafts or restore a previous version of the report text.
+
+---
+
+## 📥 Bulk Generation Queue & Flow Controller
+For editorial admins generating reports in batches using CSV files, the Bulk Generate page provides sequential dispatch scheduling and concurrency limits:
+
+### 1. Starting a Bulk Generation
+1. Upload your CSV containing list of report topics.
+2. Configure the **Concurrency Threshold** (e.g. `5`, `10`, `15`, or `20` concurrent runs) under Step 1. This determines how many workflows can run simultaneously to conserve your rate limits and API tokens.
+3. Click **Start Generation**.
+
+### 2. Managing the Pending Queue
+Once submitted, the queue table under Step 2 monitors live progress:
+* **`Running` (Pulsing Blue)**: The report is actively compiling in GitHub Actions.
+* **`Pending` (Gray)**: The report is queued in the database backlog and will dispatch automatically as slots open up.
+* **`Paused` (Amber)**: The report is queued, but processing is currently paused.
+
+### 3. Pause & Resume Controls
+* **Pause Pending Jobs**: Clicking this stops the scheduler from dispatching any new runs. Any currently `Running` workflows will finish executing, but the remaining backlog changes status to `Paused` and stays queued.
+* **Resume Pending Jobs**: Resumes the queue manager, immediately dispatching paused/pending reports up to your configured concurrency limit.
+
+### 4. Cancel All Workflows (Stop Everything)
+* Click **Cancel All Workflows** next to the pause control to stop all operations instantly.
+* **Database Action**: Changes the status of all pending and running bulk reports to `Failed (Manually Cancelled)` to completely clear the dashboard queue.
+* **GitHub Action**: Instantly sends termination signals to GitHub Actions to abort all active runner containers, protecting and saving your LLM API tokens.
+
