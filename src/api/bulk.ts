@@ -74,3 +74,14 @@ export async function setBulkQueueState(paused?: boolean, limit?: number): Promi
   const body = await res.json();
   return body.data as BulkQueueState;
 }
+
+/** Clear all pending/queued bulk jobs in the database. */
+export async function clearBulkQueue(): Promise<{ cleared_count: number }> {
+  const res = await api.post('/generation/bulk/clear-queue');
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.detail || `API error ${res.status}`);
+  }
+  const body = await res.json();
+  return body.data as { cleared_count: number };
+}

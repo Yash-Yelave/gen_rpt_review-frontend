@@ -11,12 +11,13 @@ import {
   Play,
   PlayCircle,
   RefreshCw,
+  Trash2,
   TriangleAlert,
   UploadCloud,
   XCircle,
 } from 'lucide-react';
 import type { BulkJob, BulkJobItem } from '@/api/bulk';
-import { getBulkQueue, submitBulkJobs, getBulkQueueState, setBulkQueueState } from '@/api/bulk';
+import { getBulkQueue, submitBulkJobs, getBulkQueueState, setBulkQueueState, clearBulkQueue } from '@/api/bulk';
 
 // ─── CSV parsing ─────────────────────────────────────────────────────────────
 
@@ -232,6 +233,21 @@ export const BulkGenerate: React.FC = () => {
       await fetchQueue();
     } catch (err: any) {
       setSubmitError(err.message || 'Failed to update queue state.');
+    } finally {
+      setQueueLoading(false);
+    }
+  };
+
+  const handleClearPending = async () => {
+    if (!window.confirm('Are you sure you want to cancel and clear all pending/queued jobs?')) {
+      return;
+    }
+    try {
+      setQueueLoading(true);
+      await clearBulkQueue();
+      await fetchQueue();
+    } catch (err: any) {
+      setSubmitError(err.message || 'Failed to clear pending queue.');
     } finally {
       setQueueLoading(false);
     }
@@ -475,6 +491,16 @@ export const BulkGenerate: React.FC = () => {
               {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
               {isPaused ? 'Resume Upcoming Jobs' : 'Pause Upcoming Jobs'}
             </button>
+            {stats.pending > 0 && (
+              <button
+                onClick={handleClearPending}
+                disabled={queueLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all border bg-red-50 hover:bg-red-100 text-red-700 border-red-200 disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Clear Pending Queue
+              </button>
+            )}
             <div className="flex items-center gap-1">
               <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Threshold:</span>
               <select
