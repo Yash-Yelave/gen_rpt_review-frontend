@@ -16,7 +16,7 @@ interface ReviewState {
 export const useReviewStore = create<ReviewState>((set) => ({
   decision: '',
   commentText: '',
-  commentSection: 'Any Section',
+  commentSection: 'Overall Report',
   commentPriority: 'Medium',
 
   setDecision: (decision) => set({ decision }),
@@ -24,5 +24,5 @@ export const useReviewStore = create<ReviewState>((set) => ({
   setCommentSection: (commentSection) => set({ commentSection }),
   setCommentPriority: (commentPriority) => set({ commentPriority }),
   reset: () =>
-    set({ decision: '', commentText: '', commentSection: 'Any Section', commentPriority: 'Medium' }),
+    set({ decision: '', commentText: '', commentSection: 'Overall Report', commentPriority: 'Medium' }),
 }));
