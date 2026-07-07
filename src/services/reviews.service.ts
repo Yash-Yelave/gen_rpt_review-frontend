@@ -37,11 +37,14 @@ export const reviewsService = {
         });
         if (!res.ok) throw new Error(`Revision failed (${res.status})`);
         
-        // Since revision was applied instantly, set status back to Needs Human Review
-        await postStatus(reportId, {
-          status: 'Needs Human Review',
-          humanStatus: 'Pending Editorial Approval',
-        });
+        // Since surgical revision was applied instantly, set status back to Needs Human Review
+        // For 'Overall Report', the backend dispatches a long-running workflow and sets status to 'running'
+        if (revisionData.section !== 'Overall Report') {
+          await postStatus(reportId, {
+            status: 'Needs Human Review',
+            humanStatus: 'Pending Editorial Approval',
+          });
+        }
       } else {
         await postStatus(reportId, {
           status: 'Needs Revision',
