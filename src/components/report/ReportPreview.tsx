@@ -1,5 +1,5 @@
 // src/components/report/ReportPreview.tsx
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Bot, FileText, MapPin, ArrowRight } from 'lucide-react';
 import type { Report } from '@/types';
 import { useUIStore } from '@/store/uiStore';
@@ -7,6 +7,7 @@ import { useReportNavStore } from '@/store/reportNavigationStore';
 import { formatScoreKey } from '@/utils/formatters';
 import { scoreColor, priorityBadgeClasses } from '@/utils/statusHelpers';
 import { ReportSectionRenderer } from './ReportRenderer';
+import { ImageReplaceOverlay } from './ImageReplaceOverlay';
 import { buildLocationIndex, resolveLocation } from '@/utils/locationIndex';
 import {
   parseLocation,
@@ -361,6 +362,12 @@ export const ReportPreview: React.FC<Props> = ({ report, reviewMdText = '' }) =>
   const { zoomLevel, zoomIn, zoomOut } = useUIStore();
   const { reportContent: content, title, id, version, aiScore } = report;
 
+  // Local state for image URLs — updated immediately after a successful replacement
+  // without requiring a full report refetch. Keys match reportContent.images[].key
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>(
+    () => Object.fromEntries((content.images ?? []).map((img) => [img.key, img.url]))
+  );
+
   // Tab state now lives in the navigation store so the AI Review pane can switch tabs
   const activeTab = useReportNavStore((s) => s.activeTab);
   const setActiveTab = useReportNavStore((s) => s.setActiveTab);
@@ -514,14 +521,21 @@ export const ReportPreview: React.FC<Props> = ({ report, reviewMdText = '' }) =>
                     {content.images.map((img, i) => (
                       <div
                         key={img.key}
-                        className="group border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300"
+                        className="group relative border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300"
                       >
-                        <div className="aspect-[4/3] bg-gray-50 flex items-center justify-center overflow-hidden border-b border-gray-100">
+                        <div className="relative aspect-[4/3] bg-gray-50 flex items-center justify-center overflow-hidden border-b border-gray-100">
                           <img
-                            src={img.url}
+                            src={imageUrls[img.key] ?? img.url}
                             alt={`Exhibit ${i + 1} - ${img.key}`}
                             className="max-w-full max-h-full object-contain group-hover:scale-[1.02] transition-transform duration-300"
                             loading="lazy"
+                          />
+                          <ImageReplaceOverlay
+                            reportId={id}
+                            imageKey={img.key}
+                            onReplaced={(newUrl) =>
+                              setImageUrls((prev) => ({ ...prev, [img.key]: newUrl }))
+                            }
                           />
                         </div>
                         <div className="px-4 py-2.5 bg-gray-50 flex items-center justify-between text-xs text-gray-500 font-medium">
