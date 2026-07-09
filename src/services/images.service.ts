@@ -43,4 +43,32 @@ export const imagesService = {
     const body = await res.json();
     return body.data as { key: string; url: string };
   },
+
+  /**
+   * Regenerate a specific image in a report's R2 assets folder using AI.
+   *
+   * @param reportId The ID of the report
+   * @param imageKey The key of the image to replace (e.g., 'image-0.png')
+   * @param prompt The briefing for the AI to generate the new image
+   * @returns The new presigned URL for the replaced image
+   */
+  async regenerateImage(reportId: string, imageKey: string, prompt: string): Promise<{ key: string; url: string }> {
+    const res = await fetch(`${BASE_URL}/reports/${reportId}/regenerate-image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        image_key: imageKey,
+        prompt: prompt,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to regenerate image');
+    }
+
+    return data.data;
+  },
 };

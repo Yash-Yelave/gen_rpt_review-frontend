@@ -1,6 +1,6 @@
 // src/components/report/ReportPreview.tsx
 import React, { useMemo, useRef, useState } from 'react';
-import { Bot, FileText, MapPin, ArrowRight, Upload } from 'lucide-react';
+import { Bot, FileText, MapPin, ArrowRight, Upload, Wand2 } from 'lucide-react';
 import type { Report } from '@/types';
 import { useUIStore } from '@/store/uiStore';
 import { useReportNavStore } from '@/store/reportNavigationStore';
@@ -8,6 +8,7 @@ import { formatScoreKey } from '@/utils/formatters';
 import { scoreColor, priorityBadgeClasses } from '@/utils/statusHelpers';
 import { ReportSectionRenderer } from './ReportRenderer';
 import { ImageReplaceModal } from './ImageReplaceModal';
+import { ImageRegenerateModal } from './ImageRegenerateModal';
 import { buildLocationIndex, resolveLocation } from '@/utils/locationIndex';
 import {
   parseLocation,
@@ -371,6 +372,9 @@ export const ReportPreview: React.FC<Props> = ({ report, reviewMdText = '' }) =>
   // Tracks which image is currently open in the replacement modal
   const [activeReplaceImage, setActiveReplaceImage] = useState<{ key: string; url: string } | null>(null);
 
+  // Tracks which image is currently open in the regenerate modal
+  const [activeRegenerateImage, setActiveRegenerateImage] = useState<{ key: string; url: string } | null>(null);
+
   // Tab state now lives in the navigation store so the AI Review pane can switch tabs
   const activeTab = useReportNavStore((s) => s.activeTab);
   const setActiveTab = useReportNavStore((s) => s.setActiveTab);
@@ -533,8 +537,21 @@ export const ReportPreview: React.FC<Props> = ({ report, reviewMdText = '' }) =>
                             className="max-w-full max-h-full object-contain group-hover:scale-[1.02] transition-transform duration-300"
                             loading="lazy"
                           />
-                          {/* Hover overlay that opens the replacement modal */}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          {/* Hover overlay that opens the replacement/regenerate modal */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 gap-3">
+                            <button
+                              onClick={() =>
+                                setActiveRegenerateImage({
+                                  key: img.key,
+                                  url: imageUrls[img.key] ?? img.url,
+                                })
+                              }
+                              className="flex items-center gap-1.5 px-3 py-2 bg-white text-gray-800 text-xs font-semibold rounded-md shadow-md hover:bg-gray-50 transition-colors"
+                              title="Regenerate image with AI"
+                            >
+                              <Wand2 className="w-3.5 h-3.5 text-blue-600" />
+                              Regenerate
+                            </button>
                             <button
                               onClick={() =>
                                 setActiveReplaceImage({
@@ -542,11 +559,10 @@ export const ReportPreview: React.FC<Props> = ({ report, reviewMdText = '' }) =>
                                   url: imageUrls[img.key] ?? img.url,
                                 })
                               }
-                              className="flex items-center gap-1.5 px-3 py-2 bg-white text-gray-800 text-xs font-semibold rounded-md shadow-md hover:bg-gray-50 transition-colors"
-                              title="Replace this image"
+                              className="flex flex-col items-center justify-center w-8 h-8 bg-white text-gray-800 text-xs font-semibold rounded-md shadow-md hover:bg-gray-50 transition-colors"
+                              title="Replace manually"
                             >
-                              <Upload className="w-3.5 h-3.5 text-blue-600" />
-                              Replace Image
+                              <Upload className="w-4 h-4 text-gray-500" />
                             </button>
                           </div>
                         </div>
@@ -578,6 +594,19 @@ export const ReportPreview: React.FC<Props> = ({ report, reviewMdText = '' }) =>
           onClose={() => setActiveReplaceImage(null)}
           onReplaced={(newUrl) => {
             setImageUrls((prev) => ({ ...prev, [activeReplaceImage.key]: newUrl }));
+          }}
+        />
+      )}
+
+      {/* Image regenerate modal popup */}
+      {activeRegenerateImage && (
+        <ImageRegenerateModal
+          reportId={id}
+          imageKey={activeRegenerateImage.key}
+          currentUrl={activeRegenerateImage.url}
+          onClose={() => setActiveRegenerateImage(null)}
+          onReplaced={(newUrl) => {
+            setImageUrls((prev) => ({ ...prev, [activeRegenerateImage.key]: newUrl }));
           }}
         />
       )}
