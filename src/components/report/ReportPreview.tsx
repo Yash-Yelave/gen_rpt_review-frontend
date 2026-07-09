@@ -1,13 +1,13 @@
 // src/components/report/ReportPreview.tsx
 import React, { useMemo, useRef, useState } from 'react';
-import { Bot, FileText, MapPin, ArrowRight } from 'lucide-react';
+import { Bot, FileText, MapPin, ArrowRight, Upload } from 'lucide-react';
 import type { Report } from '@/types';
 import { useUIStore } from '@/store/uiStore';
 import { useReportNavStore } from '@/store/reportNavigationStore';
 import { formatScoreKey } from '@/utils/formatters';
 import { scoreColor, priorityBadgeClasses } from '@/utils/statusHelpers';
 import { ReportSectionRenderer } from './ReportRenderer';
-import { ImageReplaceOverlay } from './ImageReplaceOverlay';
+import { ImageReplaceModal } from './ImageReplaceModal';
 import { buildLocationIndex, resolveLocation } from '@/utils/locationIndex';
 import {
   parseLocation,
@@ -368,6 +368,9 @@ export const ReportPreview: React.FC<Props> = ({ report, reviewMdText = '' }) =>
     () => Object.fromEntries((content.images ?? []).map((img) => [img.key, img.url]))
   );
 
+  // Tracks which image is currently open in the replacement modal
+  const [activeReplaceImage, setActiveReplaceImage] = useState<{ key: string; url: string } | null>(null);
+
   // Tab state now lives in the navigation store so the AI Review pane can switch tabs
   const activeTab = useReportNavStore((s) => s.activeTab);
   const setActiveTab = useReportNavStore((s) => s.setActiveTab);
@@ -530,13 +533,22 @@ export const ReportPreview: React.FC<Props> = ({ report, reviewMdText = '' }) =>
                             className="max-w-full max-h-full object-contain group-hover:scale-[1.02] transition-transform duration-300"
                             loading="lazy"
                           />
-                          <ImageReplaceOverlay
-                            reportId={id}
-                            imageKey={img.key}
-                            onReplaced={(newUrl) =>
-                              setImageUrls((prev) => ({ ...prev, [img.key]: newUrl }))
-                            }
-                          />
+                          {/* Hover overlay that opens the replacement modal */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button
+                              onClick={() =>
+                                setActiveReplaceImage({
+                                  key: img.key,
+                                  url: imageUrls[img.key] ?? img.url,
+                                })
+                              }
+                              className="flex items-center gap-1.5 px-3 py-2 bg-white text-gray-800 text-xs font-semibold rounded-md shadow-md hover:bg-gray-50 transition-colors"
+                              title="Replace this image"
+                            >
+                              <Upload className="w-3.5 h-3.5 text-blue-600" />
+                              Replace Image
+                            </button>
+                          </div>
                         </div>
                         <div className="px-4 py-2.5 bg-gray-50 flex items-center justify-between text-xs text-gray-500 font-medium">
                           <span className="font-semibold text-gray-700">Exhibit {i + 1}</span>
@@ -556,6 +568,19 @@ export const ReportPreview: React.FC<Props> = ({ report, reviewMdText = '' }) =>
 
       {/* Annotation sidebar — rendered outside scroll container so it floats above everything */}
       <AnnotationSidebar />
+
+      {/* Image replacement modal popup */}
+      {activeReplaceImage && (
+        <ImageReplaceModal
+          reportId={id}
+          imageKey={activeReplaceImage.key}
+          currentUrl={activeReplaceImage.url}
+          onClose={() => setActiveReplaceImage(null)}
+          onReplaced={(newUrl) => {
+            setImageUrls((prev) => ({ ...prev, [activeReplaceImage.key]: newUrl }));
+          }}
+        />
+      )}
     </div>
   );
 };
