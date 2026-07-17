@@ -7,11 +7,8 @@ import {
   FileText, 
   Loader2, 
   RefreshCw, 
-  ArrowLeft, 
-  Archive, 
   RotateCcw, 
   Trash2, 
-  Clock, 
   Upload,
   Search,
   CheckCircle2,
@@ -34,7 +31,6 @@ export const DocumentsList: React.FC = () => {
   const [activeDoc, setActiveDoc] = useState<KnowledgeDocument | null>(null);
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
   const [versionsLoading, setVersionsLoading] = useState(false);
-  const [rollbackSubmitting, setRollbackSubmitting] = useState(false);
   const [rollbackReason, setRollbackReason] = useState('');
   
   const [showArchiveModal, setShowArchiveModal] = useState(false);
@@ -115,7 +111,6 @@ export const DocumentsList: React.FC = () => {
 
   const handleRollback = async (targetVersion: number) => {
     if (!activeDoc) return;
-    setRollbackSubmitting(true);
     try {
       await knowledgeApiService.rollbackDocument(activeDoc.id, targetVersion, rollbackReason);
       setShowRollbackModal(false);
@@ -125,8 +120,6 @@ export const DocumentsList: React.FC = () => {
     } catch (err) {
       console.error('Failed rollback', err);
       alert('Failed to rollback document version.');
-    } finally {
-      setRollbackSubmitting(false);
     }
   };
 
