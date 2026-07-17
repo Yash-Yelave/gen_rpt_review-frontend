@@ -89,6 +89,35 @@ export const Sidebar: React.FC<Props> = ({ onCloseMobile }) => {
           })}
         </ul>
 
+        <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-400 px-2 py-4 pb-2 md:hidden lg:block">Knowledge</div>
+        <ul className="flex flex-col gap-0.5">
+          {[
+            { to: '/knowledge/collections', label: 'Collections', icon: FolderOpen },
+            { to: '/knowledge/documents', label: 'Documents', icon: FileText },
+            { to: '/knowledge/upload', label: 'Upload Documents', icon: UploadCloud },
+            { to: '/knowledge/processing', label: 'Processing Queue', icon: Cpu },
+            { to: '/knowledge/analytics', label: 'Knowledge Analytics', icon: BarChart3 },
+          ].map(({ to, label, icon: Icon }) => (
+            <li key={to}>
+              <NavLink
+                to={to}
+                onClick={onCloseMobile}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
+                   ${isActive
+                     ? 'bg-blue-50 text-blue-700 font-semibold'
+                     : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700'
+                   } md:justify-center lg:justify-start`
+                }
+                title={label}
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span className="flex-1 md:hidden lg:block">{label}</span>
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+
         <div className="text-[10px] font-semibold tracking-widest uppercase text-gray-400 px-2 py-4 pb-2 md:hidden lg:block">System</div>
         <ul>
           <li>

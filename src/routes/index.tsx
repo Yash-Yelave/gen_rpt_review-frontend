@@ -14,6 +14,13 @@ import { BulkGenerate } from '@/pages/BulkGenerate';
 import { Login } from '@/pages/Login';
 import { useAuthStore } from '@/store/authStore';
 
+// Knowledge components
+import { CollectionsList } from '@/pages/Knowledge/CollectionsList';
+import { DocumentsList } from '@/pages/Knowledge/DocumentsList';
+import { UploadDocuments } from '@/pages/Knowledge/UploadDocuments';
+import { ProcessingQueue } from '@/pages/Knowledge/ProcessingQueue';
+import { KnowledgeAnalytics } from '@/pages/Knowledge/KnowledgeAnalytics';
+
 // Simple Auth Guard
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const token = useAuthStore((s) => s.token);
@@ -50,6 +57,14 @@ export const router = createBrowserRouter([
       { path: 'rejected', element: <RejectedList /> },
       { path: 'published', element: <PublishedList /> },
       { path: 'settings', element: <Settings /> },
+      
+      // Knowledge Section
+      { path: 'knowledge/collections', element: <CollectionsList /> },
+      { path: 'knowledge/documents', element: <DocumentsList /> },
+      { path: 'knowledge/upload', element: <UploadDocuments /> },
+      { path: 'knowledge/processing', element: <ProcessingQueue /> },
+      { path: 'knowledge/analytics', element: <KnowledgeAnalytics /> },
+
       // Legacy redirects
       { path: 'review', element: <Navigate to="/ai-reviewed" replace /> },
       { path: 'reviewed', element: <Navigate to="/approved" replace /> },
