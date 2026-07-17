@@ -12,8 +12,7 @@ import {
   Award, 
   CheckCircle,
   FileText,
-  Clock,
-  Settings
+  Clock
 } from 'lucide-react';
 
 export const KnowledgeAnalytics: React.FC = () => {

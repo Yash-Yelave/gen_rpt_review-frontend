@@ -1,6 +1,5 @@
-// src/pages/Knowledge/UploadDocuments.tsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { knowledgeApiService } from '@/services/knowledgeApi';
 import type { KnowledgeCollection } from '@/types/knowledge.types';
@@ -10,10 +9,9 @@ import {
   CheckCircle, 
   XCircle, 
   FileText, 
-  AlertTriangle,
-  Database,
-  ArrowRight
+  AlertTriangle
 } from 'lucide-react';
+import { formatBytes } from '@/utils/formatters';
 
 interface FileUploadState {
   file: File;
@@ -25,7 +23,6 @@ interface FileUploadState {
 
 export const UploadDocuments: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const [collections, setCollections] = useState<KnowledgeCollection[]>([]);
   const [selectedColId, setSelectedColId] = useState(searchParams.get('collection_id') || '');
   const [loading, setLoading] = useState(true);

@@ -10,7 +10,6 @@ import {
   XCircle, 
   Terminal, 
   Clock, 
-  AlertTriangle,
   Play
 } from 'lucide-react';
 import { formatDate } from '@/utils/formatters';
