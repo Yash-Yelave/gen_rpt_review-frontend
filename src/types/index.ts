@@ -4,3 +4,4 @@ export * from './comment.types';
 export * from './review.types';
 export * from './dashboard.types';
 export * from './publish.types';
+export * from './knowledge.types';

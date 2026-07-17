@@ -9,7 +9,8 @@ export async function apiClient(endpoint: string, options?: RequestInit): Promis
   const url = `${BASE_URL}${endpoint}`;
   
   const headers = new Headers(options?.headers);
-  if (!headers.has('Content-Type') && options?.method && options.method !== 'GET') {
+  const isFormData = options?.body instanceof FormData;
+  if (!headers.has('Content-Type') && options?.method && options.method !== 'GET' && !isFormData) {
     headers.set('Content-Type', 'application/json');
   }
 
