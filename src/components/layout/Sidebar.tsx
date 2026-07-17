@@ -13,6 +13,11 @@ import {
   History,
   Layers,
   LogOut,
+  FolderOpen,
+  FileText,
+  UploadCloud,
+  Cpu,
+  BarChart3,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useDashboardMetrics } from '@/hooks/useReports';
