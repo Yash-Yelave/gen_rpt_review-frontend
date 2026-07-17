@@ -9,15 +9,13 @@ import {
   Plus, 
   Folder, 
   Archive, 
-  RefreshCw, 
-  ExternalLink,
   Eye,
   Trash2,
   Lock,
   Globe,
   Users
 } from 'lucide-react';
-import { formatDate, formatBytes } from '@/utils/formatters';
+import { formatBytes } from '@/utils/formatters';
 
 export const CollectionsList: React.FC = () => {
   const navigate = useNavigate();

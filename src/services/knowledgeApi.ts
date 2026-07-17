@@ -4,8 +4,7 @@ import type {
   KnowledgeCollection, 
   KnowledgeDocument, 
   DocumentVersion,
-  QueueJob, 
-  KnowledgeAnalytics 
+  QueueJob
 } from '@/types/knowledge.types';
 
 export const knowledgeApiService = {
