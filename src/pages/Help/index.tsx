@@ -38,19 +38,42 @@ export const Help: React.FC = () => {
               <li>Click <strong>Sign In</strong> to access the main Dashboard.</li>
             </ol>
 
-            <h4 className="font-semibold text-gray-900 mt-6">The Core Navigation Sidebar</h4>
-            <p>The left sidebar lets you jump between the application modules:</p>
-            <ul className="list-disc pl-5 space-y-2 mt-2">
-              <li><strong>Dashboard:</strong> High-level metrics, new report creation panel, and recent platform events.</li>
-              <li><strong>Generation History:</strong> Tracking in-progress AI reports.</li>
-              <li><strong>Bulk Generate:</strong> Batch processing reports via CSV files.</li>
-              <li><strong>AI-Reviewed:</strong> New AI-generated reports awaiting human checks.</li>
-              <li><strong>Approved:</strong> Cleared reports ready to be published.</li>
-              <li><strong>Needs Revision:</strong> Reports marked with quality flags needing edits.</li>
-              <li><strong>Rejected:</strong> Discarded drafts.</li>
-              <li><strong>Published:</strong> Live reports deployed to client websites.</li>
-              <li><strong>Settings:</strong> System configurations.</li>
-            </ul>
+            <h4 className="font-semibold text-gray-900 mt-8 border-b border-gray-100 pb-2 mb-4">The Core Navigation Sidebar</h4>
+            <p className="mb-4">The left sidebar is your main control center. It lets you jump between the application modules:</p>
+            
+            <div className="space-y-4">
+              <div className="bg-slate-50 border border-slate-100 rounded p-4">
+                <strong className="text-gray-900 text-base flex items-center gap-2">
+                  <LayoutDashboard className="w-4 h-4 text-blue-500" /> Dashboard
+                </strong>
+                <p className="mt-2 text-gray-600"><strong>What it does:</strong> Provides high-level KPI metrics, recent platform events, and a quick-access panel for single report generation.</p>
+                <p className="mt-1 text-gray-600"><strong>How it works:</strong> This is your primary landing page. Use the top KPI cards to see exactly how many reports are pending review, approved, or published. Use the "Generate New Report" panel to instantly request a new AI draft by entering a title and industry.</p>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-100 rounded p-4">
+                <strong className="text-gray-900 text-base flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-500" /> Generation Modules (History & Bulk)
+                </strong>
+                <p className="mt-2 text-gray-600"><strong>What it does:</strong> These tabs control the AI engine's active queue and batch processing capabilities.</p>
+                <p className="mt-1 text-gray-600"><strong>How it works:</strong> Navigate to <em>Bulk Generate</em> to upload a CSV file of report topics and trigger massive batch jobs. Once jobs are queued, use <em>Generation History</em> to track their real-time execution progress, pause the queue, or cancel active workflows if rate limits are reached.</p>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-100 rounded p-4">
+                <strong className="text-gray-900 text-base flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-indigo-500" /> Lifecycle & Status Queues
+                </strong>
+                <p className="mt-2 text-gray-600"><strong>What it does:</strong> These five tabs (AI-Reviewed, Approved, Needs Revision, Rejected, Published) represent the entire workflow pipeline of a report.</p>
+                <p className="mt-1 text-gray-600"><strong>How it works:</strong> When a report finishes generating, it automatically lands in <em>AI-Reviewed</em>. Editors click reports in this tab to open the Review Workspace. Depending on the editor's decision, the report is moved into <em>Approved</em>, <em>Needs Revision</em>, or <em>Rejected</em>. Once an Approved report is deployed to the live site, it moves to <em>Published</em>.</p>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-100 rounded p-4">
+                <strong className="text-gray-900 text-base flex items-center gap-2">
+                  <FolderTree className="w-4 h-4 text-emerald-500" /> Knowledge Base (RAG)
+                </strong>
+                <p className="mt-2 text-gray-600"><strong>What it does:</strong> Manages the private, proprietary documents that the AI uses to ground its facts.</p>
+                <p className="mt-1 text-gray-600"><strong>How it works:</strong> Use the Collections tab to create grouped folders of context. Use the Upload Documents tab to import PDFs or Markdown files into those collections. The Documents tab allows you to monitor the background processing and embedding status of everything you've uploaded.</p>
+              </div>
+            </div>
           </div>
         </SectionCard>
 
