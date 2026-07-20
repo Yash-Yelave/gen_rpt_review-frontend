@@ -82,3 +82,25 @@ Once submitted, the queue table under Step 2 monitors live progress:
 * **Database Action**: Changes the status of all pending and running bulk reports to `Failed (Manually Cancelled)` to completely clear the dashboard queue.
 * **GitHub Action**: Instantly sends termination signals to GitHub Actions to abort all active runner containers, protecting and saving your LLM API tokens.
 
+
+---
+
+## 📂 Knowledge Base (RAG) Management
+The **Knowledge Base** section in the sidebar allows you to upload and manage the private reference documents that the AI uses as its ground truth (also called RAG - Retrieval-Augmented Generation). It contains three main views:
+
+### 1. 📁 Collections Tab
+* **What it is**: Think of collections as folders or libraries. 
+* **How it works**: You use collections to group related documents together (for example, putting all "Project SkyNet" documents in one collection, and "Consumer Survey" documents in another). When you generate a new report, you choose which collection of files the AI should read to write that report.
+
+### 2. 📄 Documents Tab
+* **What it is**: Your central document manager.
+* **How it works**: This view lists all the individual files (PDFs, Markdown, text files) currently uploaded to the system. You can see their filename, which collection they belong to, and their status (e.g., whether the system is currently processing them or if they are ready for the AI to read). You can also delete outdated files here.
+
+### 3. 📤 Upload Documents Tab
+* **What it is**: The importer for new files.
+* **How it works**: 
+  1. Select the **Target Collection** where you want your new files to go.
+  2. Drag and drop your files (or click to browse) into the upload area.
+  3. Click **Upload**. The system will process the documents, automatically read their text, and prepare them for the AI to reference.
+
+
