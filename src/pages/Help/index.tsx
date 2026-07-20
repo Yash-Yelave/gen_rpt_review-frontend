@@ -1,5 +1,16 @@
 import React from 'react';
-import { BookOpen, Edit3, Sparkles, UploadCloud, FolderTree, FileText } from 'lucide-react';
+import { 
+  BookOpen, 
+  LayoutDashboard,
+  FileText, 
+  Layers, 
+  Edit3, 
+  Image as ImageIcon,
+  Send,
+  FolderTree, 
+  UploadCloud, 
+  Sparkles
+} from 'lucide-react';
 import { SectionCard } from '@/components/common/SectionCard';
 
 export const Help: React.FC = () => {
@@ -8,57 +19,164 @@ export const Help: React.FC = () => {
       <div className="border-b border-gray-200 pb-5">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <BookOpen className="w-6 h-6 text-blue-600" />
-          System Help & User Guide
+          Platform User Guide
         </h1>
         <p className="mt-2 text-sm text-gray-500">
-          Learn how to navigate the human-in-the-loop review workspace, manage bulk generations, and upload RAG documents.
+          Comprehensive Documentation & Workflow Instructions
         </p>
       </div>
 
       <div className="space-y-6">
-        <SectionCard title="1. Editorial Review Workspace" icon={<Edit3 />} defaultOpen className="shadow-sm border border-gray-200 rounded-lg">
+        
+        {/* SECTION 1 & 2 */}
+        <SectionCard title="1. Getting Started & Navigation" icon={<LayoutDashboard />} defaultOpen className="shadow-sm border border-gray-200 rounded-lg">
           <div className="p-5 text-sm text-gray-700 space-y-4">
-            <h4 className="font-semibold text-gray-900">Editing Text Inline</h4>
-            <p>
-              Double-click any paragraph or hover over text block content to edit the text directly inside your browser. 
-              As you make changes, a green badge count will appear over the <strong>Save Edits</strong> icon (pencil) in the top-right toolbar.
-            </p>
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded text-yellow-800">
-              <strong className="block mb-1">CRITICAL RULE:</strong>
-              Always save inline edits first using the pencil topbar button before clicking the primary "Save Review" button or navigating away.
+            <h4 className="font-semibold text-gray-900">Login</h4>
+            <ol className="list-decimal pl-5 space-y-2">
+              <li>Open your browser and navigate to the login page: <code>https://gen-rpt-review-frontend.pages.dev/login</code></li>
+              <li>Enter your credentials. (Contact your administrator if you do not have an account).</li>
+              <li>Click <strong>Sign In</strong> to access the main Dashboard.</li>
+            </ol>
+
+            <h4 className="font-semibold text-gray-900 mt-6">The Core Navigation Sidebar</h4>
+            <p>The left sidebar lets you jump between the application modules:</p>
+            <ul className="list-disc pl-5 space-y-2 mt-2">
+              <li><strong>Dashboard:</strong> High-level metrics, new report creation panel, and recent platform events.</li>
+              <li><strong>Generation History:</strong> Tracking in-progress AI reports.</li>
+              <li><strong>Bulk Generate:</strong> Batch processing reports via CSV files.</li>
+              <li><strong>AI-Reviewed:</strong> New AI-generated reports awaiting human checks.</li>
+              <li><strong>Approved:</strong> Cleared reports ready to be published.</li>
+              <li><strong>Needs Revision:</strong> Reports marked with quality flags needing edits.</li>
+              <li><strong>Rejected:</strong> Discarded drafts.</li>
+              <li><strong>Published:</strong> Live reports deployed to client websites.</li>
+              <li><strong>Settings:</strong> System configurations.</li>
+            </ul>
+          </div>
+        </SectionCard>
+
+        {/* SECTION 3 */}
+        <SectionCard title="2. Generating Single & Bulk Reports" icon={<Sparkles />} defaultOpen className="shadow-sm border border-gray-200 rounded-lg">
+          <div className="p-5 text-sm text-gray-700 space-y-6">
+            <div>
+              <h4 className="font-semibold text-gray-900">Generating a Single Report</h4>
+              <ol className="list-decimal pl-5 space-y-2 mt-2">
+                <li>Go to the <strong>Dashboard</strong> page.</li>
+                <li>Look at the <strong>Generate New Report</strong> panel.</li>
+                <li>Type the Title/Topic of the report (e.g., <em>Nuclear fusion commercialization outlook</em>).</li>
+                <li>Select the target Industry (e.g., <em>Energy, Technology</em>).</li>
+                <li>Click <strong>Create Draft</strong>. You can monitor its live progress on the Generation History page.</li>
+              </ol>
             </div>
 
-            <h4 className="font-semibold text-gray-900 mt-6">Prompting Inline AI Revisions</h4>
-            <p>Hover your cursor over a target paragraph to reveal the AI Toolbar with three actions:</p>
-            <ul className="list-disc pl-5 space-y-2 mt-2">
-              <li><strong>Rewrite:</strong> Makes the text more concise and professional.</li>
-              <li><strong>Expand:</strong> Elaborates on the topic with added detail and context.</li>
-              <li><strong>Regenerate:</strong> Swaps the current paragraph with a freshly compiled draft.</li>
-            </ul>
-
-            <h4 className="font-semibold text-gray-900 mt-6">Submitting Editorial Decisions</h4>
-            <p>Use the right-hand Human Review Panel to log your official status (Approved, Needs Revision, or Rejected). Once approved, you can click "Publish Report" to push the web layout and PDF to production.</p>
+            <div>
+              <h4 className="font-semibold text-gray-900">Generating Bulk Reports via CSV Upload</h4>
+              <ol className="list-decimal pl-5 space-y-2 mt-2">
+                <li>Click <strong>Bulk Generate</strong> in the sidebar.</li>
+                <li>Drag and drop your CSV file containing report titles/topics into the upload area.</li>
+                <li>Verify the loaded list of topics.</li>
+                <li>Click <strong>Start Batch Generation</strong>. All reports will be queued, running up to 20 concurrent jobs at a time.</li>
+              </ol>
+            </div>
           </div>
         </SectionCard>
 
-        <SectionCard title="2. Bulk Generation Queue" icon={<Sparkles />} defaultOpen className="shadow-sm border border-gray-200 rounded-lg">
+        {/* SECTION 4 */}
+        <SectionCard title="3. The Report Lifecycle & Status Lists" icon={<Layers />} defaultOpen className="shadow-sm border border-gray-200 rounded-lg">
           <div className="p-5 text-sm text-gray-700 space-y-4">
-            <p>
-              The Bulk Generate page provides sequential dispatch scheduling and concurrency limits to conserve your rate limits and API tokens.
-            </p>
-            <h4 className="font-semibold text-gray-900">Queue Statuses</h4>
-            <ul className="list-disc pl-5 space-y-2 mt-2">
-              <li><span className="text-blue-600 font-semibold">Running:</span> Actively compiling in GitHub Actions.</li>
-              <li><span className="text-gray-500 font-semibold">Pending:</span> Queued in the database backlog and will dispatch automatically.</li>
-              <li><span className="text-amber-600 font-semibold">Paused:</span> Queued, but processing is currently paused.</li>
+            <p>As reports are processed, reviewed, and finalized, they move through different stages accessible in the sidebar:</p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li><strong>AI-Reviewed:</strong> Drafts generated by AI that are ready for manual review.</li>
+              <li><strong>Approved:</strong> Contains all drafts cleared by editors. Click on any report here to deploy it.</li>
+              <li><strong>Needs Revision:</strong> Lists all drafts marked as needing corrections.</li>
+              <li><strong>Rejected:</strong> Reports that were discarded.</li>
+              <li><strong>Published:</strong> Currently live customer-facing documents.</li>
             </ul>
-            <p className="mt-4">
-              <strong>Cancel All Workflows:</strong> Instantly sends termination signals to GitHub Actions to abort all active runner containers, protecting your LLM tokens.
-            </p>
           </div>
         </SectionCard>
 
-        <SectionCard title="3. Knowledge Base (RAG) Management" icon={<FolderTree />} defaultOpen className="shadow-sm border border-gray-200 rounded-lg border-blue-100 bg-blue-50/30">
+        {/* SECTION 5 & 7 */}
+        <SectionCard title="4. Interactive Review Workspace & Editing" icon={<Edit3 />} defaultOpen className="shadow-sm border border-gray-200 rounded-lg">
+          <div className="p-5 text-sm text-gray-700 space-y-6">
+            <p>
+              Clicking on any report in a list will open the Report Review Workspace. It is divided into two primary views:
+            </p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li><strong>Interactive Document Viewer (Left side):</strong> Renders the beautiful report layout, formatting, and visuals.</li>
+              <li><strong>Collaboration Sidebar (Right side):</strong> Contains TOC, AI Review quality cards, and collaborative Comments.</li>
+            </ul>
+
+            <div>
+              <h4 className="font-semibold text-gray-900">Editing Text Inline</h4>
+              <ul className="list-disc pl-5 space-y-2 mt-2">
+                <li>Simply click on any paragraph in the left document viewer.</li>
+                <li>The paragraph becomes editable (like a word processor). Type your updates directly.</li>
+                <li>Press <strong>Enter</strong> or click outside to save. The changes persist instantly to the database/R2.</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-gray-900">Adding & Resolving Comments</h4>
+              <ul className="list-disc pl-5 space-y-2 mt-2">
+                <li>Highlight any sentence or click a paragraph.</li>
+                <li>In the right sidebar, click the <strong>Comments</strong> tab.</li>
+                <li>Type your comment and click <strong>Post</strong>.</li>
+                <li>To complete or close a suggestion, click <strong>Resolve</strong> on the comment card.</li>
+              </ul>
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* SECTION 6 */}
+        <SectionCard title="5. Managing Visual Exhibits" icon={<ImageIcon />} defaultOpen className="shadow-sm border border-gray-200 rounded-lg">
+          <div className="p-5 text-sm text-gray-700 space-y-6">
+            <p>Every report includes high-quality editorial figures and charts in the gallery at the bottom of the page. You can customize these on the fly.</p>
+            
+            <div>
+              <h4 className="font-semibold text-gray-900">Option A: Manual Replace</h4>
+              <ol className="list-decimal pl-5 space-y-2 mt-2">
+                <li>Hover your cursor over the image you want to change.</li>
+                <li>Click the compact <strong>Upload Icon</strong> (the tray-arrow button).</li>
+                <li>Drag and drop your new image file (PNG/JPG) or click to browse.</li>
+                <li>Click <strong>Upload & Replace</strong>. The image instantly updates.</li>
+              </ol>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-gray-900">Option B: Ask AI to Regenerate</h4>
+              <ol className="list-decimal pl-5 space-y-2 mt-2">
+                <li>Hover your cursor over the image.</li>
+                <li>Click the <strong>Regenerate</strong> button (the magic wand icon).</li>
+                <li>In the text area, type a description briefing (e.g., <em>"Futuristic clean energy fusion reactor power lines"</em>).</li>
+                <li>Click <strong>Generate & Replace</strong>. The AI will create a beautiful new visual automatically.</li>
+              </ol>
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* SECTION 8 */}
+        <SectionCard title="6. Publishing and Generating PDFs" icon={<Send />} defaultOpen className="shadow-sm border border-gray-200 rounded-lg">
+          <div className="p-5 text-sm text-gray-700 space-y-6">
+            <div>
+              <h4 className="font-semibold text-gray-900">PDF Export</h4>
+              <p className="mt-2">
+                At the top header of the review workspace, click the <strong>Download PDF</strong> button. The backend compiles the HTML layout, including all custom text edits and updated AI-generated images, into a print-ready PDF file.
+              </p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-gray-900">Publishing Live</h4>
+              <ol className="list-decimal pl-5 space-y-2 mt-2">
+                <li>If the draft is finalized, click <strong>Approve</strong> to move it to the approved queue.</li>
+                <li>From the approved list, click <strong>Publish</strong>.</li>
+                <li>The system will deploy the web page, index files, and cover visuals to live customer-facing sites.</li>
+                <li>If you need to make changes after deployment, click <strong>Unpublish</strong> to pull the report back into draft mode.</li>
+              </ol>
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* KNOWLEDGE BASE / RAG */}
+        <SectionCard title="7. Knowledge Base (RAG) Management" icon={<FolderTree />} defaultOpen className="shadow-sm border border-gray-200 rounded-lg border-blue-100 bg-blue-50/30">
           <div className="p-5 text-sm text-gray-700 space-y-6">
             <p>
               The <strong>Knowledge Base</strong> section in the sidebar allows you to upload and manage private reference documents that the AI uses as its ground truth (Retrieval-Augmented Generation).
@@ -96,7 +214,6 @@ export const Help: React.FC = () => {
                 </p>
               </div>
             </div>
-
           </div>
         </SectionCard>
       </div>
