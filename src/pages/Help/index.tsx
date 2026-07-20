@@ -1,6 +1,6 @@
 import React from 'react';
-import { BookOpen, Edit3, Sparkles, CheckCircle, UploadCloud, FolderTree, FileText } from 'lucide-react';
-import { SectionCard } from '@/components/ui/SectionCard';
+import { BookOpen, Edit3, Sparkles, UploadCloud, FolderTree, FileText } from 'lucide-react';
+import { SectionCard } from '@/components/common/SectionCard';
 
 export const Help: React.FC = () => {
   return (
