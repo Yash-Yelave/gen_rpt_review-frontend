@@ -12,6 +12,7 @@ import { Settings } from '@/pages/Settings';
 import { GenerationHistory } from '@/pages/GenerationHistory';
 import { BulkGenerate } from '@/pages/BulkGenerate';
 import { Login } from '@/pages/Login';
+import { Help } from '@/pages/Help';
 import { useAuthStore } from '@/store/authStore';
 
 // Knowledge components
@@ -57,6 +58,7 @@ export const router = createBrowserRouter([
       { path: 'rejected', element: <RejectedList /> },
       { path: 'published', element: <PublishedList /> },
       { path: 'settings', element: <Settings /> },
+      { path: 'system/help', element: <Help /> },
       
       // Knowledge Section
       { path: 'knowledge/collections', element: <CollectionsList /> },
