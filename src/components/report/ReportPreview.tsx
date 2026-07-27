@@ -1,6 +1,6 @@
 // src/components/report/ReportPreview.tsx
 import React, { useMemo, useRef, useState } from 'react';
-import { Bot, FileText, MapPin, ArrowRight, Upload, Wand2 } from 'lucide-react';
+import { Bot, FileText, MapPin, ArrowRight, Upload, Wand2, ExternalLink, BookOpen, Globe } from 'lucide-react';
 import type { Report } from '@/types';
 import { useUIStore } from '@/store/uiStore';
 import { useReportNavStore } from '@/store/reportNavigationStore';
@@ -111,6 +111,134 @@ const LocationBadge: React.FC<{
           Jump to Report
           <ArrowRight className="w-3 h-3" />
         </button>
+      )}
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sources Panel — renders RAG + web references at the bottom of the report
+// ─────────────────────────────────────────────────────────────────────────────
+import type { ReportReference } from '@/types';
+
+const SourcesPanel: React.FC<{ references: ReportReference[] }> = ({ references }) => {
+  if (!references || references.length === 0) return null;
+
+  const ragSources = references.filter((r) => r.origin === 'rag');
+  const webSources = references.filter((r) => r.origin !== 'rag');
+
+  // Extract a clean filename from a RAG title like "quantum_computing_2026.md (Fragment 30e8f40c)"
+  const ragFilename = (title: string) => {
+    const match = title.match(/^(.+?)(?:\s*\(Fragment [a-f0-9]+\))?$/);
+    return match ? match[1].trim() : title;
+  };
+
+  const ragFragment = (title: string) => {
+    const match = title.match(/\(Fragment ([a-f0-9]+)\)/);
+    return match ? match[1] : null;
+  };
+
+  return (
+    <div className="mt-10 border-t-2 border-gray-200 pt-8">
+      <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-6 flex items-center gap-2">
+        <BookOpen className="w-4 h-4 text-blue-600" />
+        <span>Sources</span>
+        <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full font-mono">
+          {references.length}
+        </span>
+      </h3>
+
+      {/* Private Documents (RAG) */}
+      {ragSources.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-blue-700 mb-3">
+            <BookOpen className="w-3.5 h-3.5" />
+            Private Documents
+            <span className="ml-1 bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-mono font-semibold">
+              {ragSources.length}
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {ragSources.map((ref, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-100 rounded-md"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-semibold text-blue-800">
+                      {ragFilename(ref.title)}
+                    </span>
+                    {ragFragment(ref.title) && (
+                      <span className="text-[10px] font-mono bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">
+                        Fragment {ragFragment(ref.title)}
+                      </span>
+                    )}
+                  </div>
+                  {ref.note && (
+                    <p className="text-[11px] text-gray-600 mt-1 leading-snug line-clamp-2">
+                      {ref.note}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Web Sources */}
+      {webSources.length > 0 && (
+        <div>
+          <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-green-700 mb-3">
+            <Globe className="w-3.5 h-3.5" />
+            Web Sources
+            <span className="ml-1 bg-green-50 text-green-600 px-1.5 py-0.5 rounded font-mono font-semibold">
+              {webSources.length}
+            </span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {webSources.map((ref, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-3 p-3 bg-gray-50 border border-gray-200 rounded-md"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-green-400 mt-1.5 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {ref.domain && (
+                      <span className="text-[10px] font-mono bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded">
+                        {ref.domain}
+                      </span>
+                    )}
+                    {ref.url && !ref.url.startsWith('internal://') ? (
+                      <a
+                        href={ref.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-blue-700 hover:underline flex items-center gap-0.5 truncate max-w-xs"
+                        title={ref.title}
+                      >
+                        {ref.title.length > 70 ? ref.title.slice(0, 70) + '…' : ref.title}
+                        <ExternalLink className="w-3 h-3 flex-shrink-0 ml-0.5" />
+                      </a>
+                    ) : (
+                      <span className="text-xs font-semibold text-gray-700 truncate max-w-xs" title={ref.title}>
+                        {ref.title.length > 70 ? ref.title.slice(0, 70) + '…' : ref.title}
+                      </span>
+                    )}
+                  </div>
+                  {ref.note && ref.note !== ref.url && (
+                    <p className="text-[11px] text-gray-500 mt-1 leading-snug line-clamp-2">
+                      {ref.note.length > 180 ? ref.note.slice(0, 180) + '…' : ref.note}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -576,6 +704,9 @@ export const ReportPreview: React.FC<Props> = ({ report, reviewMdText = '' }) =>
                 </div>
               )}
             </div>
+
+            {/* Sources Panel — RAG + web references */}
+            <SourcesPanel references={content.references ?? []} />
           </div>
         ) : (
           <AIReviewPane report={report} />

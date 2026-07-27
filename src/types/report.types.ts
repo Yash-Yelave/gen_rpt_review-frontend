@@ -75,12 +75,27 @@ export interface ReportImage {
   url: string;
 }
 
+export interface ReportReference {
+  /** Display title — either a web page title or an internal document filename+fragment */
+  title: string;
+  /** Public URL (web sources) or internal URI (rag sources: internal://documents/...) */
+  url: string;
+  /** The evidence snippet / note text associated with this source */
+  note: string;
+  /** Domain extracted from the URL (e.g. "postquantum.com") */
+  domain: string;
+  /** "rag" = private-document chunk, "web" = supplementary web source */
+  origin: 'rag' | 'web' | string;
+}
+
 export interface ReportContent {
   brand: string;
   label: string;
   date: string;
   sections: ReportSection[];
   images?: ReportImage[];
+  /** Source references generated during report creation (web + RAG document chunks) */
+  references?: ReportReference[];
 }
 
 export interface Report {
