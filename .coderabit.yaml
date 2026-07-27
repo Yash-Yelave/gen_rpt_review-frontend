@@ -1,0 +1,30 @@
+# CodeRabbit AI Configuration
+# https://docs.coderabit.ai/working-with-coderabit/customize-coderabit
+
+version: "2"
+language: "en-US"
+tone_instructions: "Be concise, analytical, and focus on production readiness, React/TypeScript best practices, component state mutation safety, and UI accessibility."
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  sequence_diagrams: true
+  collapse_walkthrough: true
+  path_filters:
+    - "!**/dist/**"
+    - "!**/node_modules/**"
+    - "!**/.wrangler/**"
+    - "!**/package-lock.json"
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "master"
+      - "dev"
+
+chat:
+  auto_reply: true
