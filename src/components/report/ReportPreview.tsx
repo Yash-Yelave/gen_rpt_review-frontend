@@ -28,10 +28,11 @@ interface Props {
 const CONTRIBUTORS = [
   { name: 'Yash Yelave', initials: 'YY' },
   { name: 'Jacob', initials: 'JC' },
+  { name: 'Denise', initials: 'DN' },
   { name: 'YFen', initials: 'YF' },
   { name: 'Niluksha', initials: 'NL' },
 ];
-const AVATAR_COLORS = ['bg-blue-600', 'bg-indigo-600', 'bg-violet-600', 'bg-teal-600'];
+const AVATAR_COLORS = ['bg-blue-600', 'bg-indigo-600', 'bg-emerald-600', 'bg-violet-600', 'bg-teal-600'];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Section TOC — auto-generated horizontal strip above document body
