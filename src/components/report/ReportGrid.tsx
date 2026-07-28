@@ -16,9 +16,15 @@ export const ReportGrid: React.FC<Props> = ({ statuses, emptyTitle, emptyText, s
   const reports = useFilteredReports(statuses);
 
   const sortedReports = React.useMemo(() => {
+    const parseDate = (val: string | undefined) => {
+      if (!val) return 0;
+      const clean = val.replace(/\+00:00Z$/i, 'Z').replace(/\+00:00$/i, 'Z').replace(/Z+$/i, 'Z').trim();
+      const t = new Date(clean).getTime();
+      return isNaN(t) ? 0 : t;
+    };
     return [...reports].sort((a, b) => {
-      const dateA = new Date(a.lastUpdated).getTime();
-      const dateB = new Date(b.lastUpdated).getTime();
+      const dateA = parseDate(a.lastUpdated);
+      const dateB = parseDate(b.lastUpdated);
       return sortBy === 'latest' ? dateB - dateA : dateA - dateB;
     });
   }, [reports, sortBy]);

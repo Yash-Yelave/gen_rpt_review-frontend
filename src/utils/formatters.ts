@@ -1,10 +1,28 @@
 // src/utils/formatters.ts
 
 export function formatDate(isoStr: string | null | undefined): string {
-  if (!isoStr) return '—';
-  const d = new Date(isoStr);
+  if (!isoStr || isoStr === 'Invalid Date') return '—';
+  
+  // Clean up any malformed ISO strings (e.g. "+00:00Z", double "Z"s, trailing invalid characters)
+  let cleanStr = typeof isoStr === 'string'
+    ? isoStr.replace(/\+00:00Z$/i, 'Z').replace(/\+00:00$/i, 'Z').replace(/Z+$/i, 'Z').trim()
+    : isoStr;
+
+  let d = new Date(cleanStr);
+  if (isNaN(d.getTime())) {
+    d = new Date(String(isoStr));
+  }
+
+  if (isNaN(d.getTime())) {
+    return isoStr && isoStr !== 'Invalid Date' ? isoStr : '—';
+  }
+
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
+  if (diffMs < 0) {
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);

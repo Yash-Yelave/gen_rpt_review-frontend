@@ -49,12 +49,17 @@ function formatBytes(bytes: number): string {
 
 function formatDate(iso: string): string {
   try {
-    return new Date(iso).toLocaleString(undefined, {
+    const clean = typeof iso === 'string'
+      ? iso.replace(/\+00:00Z$/i, 'Z').replace(/\+00:00$/i, 'Z').replace(/Z+$/i, 'Z').trim()
+      : iso;
+    const d = new Date(clean);
+    if (isNaN(d.getTime())) return iso || '—';
+    return d.toLocaleString(undefined, {
       dateStyle: 'medium',
       timeStyle: 'short',
     });
   } catch {
-    return iso;
+    return iso || '—';
   }
 }
 
