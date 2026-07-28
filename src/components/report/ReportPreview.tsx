@@ -4,7 +4,7 @@ import { Bot, FileText, MapPin, ArrowRight, Upload, Wand2, ExternalLink, BookOpe
 import type { Report } from '@/types';
 import { useUIStore } from '@/store/uiStore';
 import { useReportNavStore } from '@/store/reportNavigationStore';
-import { formatScoreKey } from '@/utils/formatters';
+import { formatScoreKey, formatDate } from '@/utils/formatters';
 import { scoreColor, priorityBadgeClasses } from '@/utils/statusHelpers';
 import { ReportSectionRenderer } from './ReportRenderer';
 import { ImageReplaceModal } from './ImageReplaceModal';
@@ -597,7 +597,11 @@ export const ReportPreview: React.FC<Props> = ({ report, reviewMdText = '' }) =>
               <div className="flex items-center gap-4 flex-wrap mb-3">
                 <span className="text-xs text-gray-400">ID: {id}</span>
                 <span className="text-xs text-gray-400">{version}</span>
-                <span className="text-xs text-gray-400">{content.date}</span>
+                <span className="text-xs text-gray-400">
+                  {report.lastUpdated && formatDate(report.lastUpdated) !== '—'
+                    ? formatDate(report.lastUpdated)
+                    : content.date}
+                </span>
               </div>
 
               {/* AI Score badge */}
