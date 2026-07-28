@@ -25,7 +25,7 @@ export const CollectionsList: React.FC = () => {
   const [newColName, setNewColName] = useState('');
   const [newColSlug, setNewColSlug] = useState('');
   const [newColDesc, setNewColDesc] = useState('');
-  const [newColVisibility, setNewColVisibility] = useState('private');
+  const [newColVisibility, setNewColVisibility] = useState('public');
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -82,7 +82,7 @@ export const CollectionsList: React.FC = () => {
       setNewColName('');
       setNewColSlug('');
       setNewColDesc('');
-      setNewColVisibility('private');
+      setNewColVisibility('public');
       fetchCollections();
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to create collection. Name or Slug may already exist.');
